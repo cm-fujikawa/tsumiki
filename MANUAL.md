@@ -8,24 +8,12 @@ Claude Code Pluginを使用してTsumikiをインストールします：
 
 ```bash
 /plugin marketplace add https://github.com/classmethod/tsumiki.git
+/plugin install tsumiki@tsumiki 
 ```
 
-**注意**: Claude Code Pluginでインストールした場合、コマンドは `/tsumiki:` プレフィックス付きで実行します（例：`/tsumiki:kairo-requirements`）。
+**注意**: コマンドは `/tsumiki:` プレフィックス付きで実行します（例：`/tsumiki:kairo-requirements`）。
 
-#### 非推奨：手動セットアップ
-
-以下の方法でも利用可能ですが、Plugin方式を推奨します：
-
-```bash
-# プロジェクトのcommandsディレクトリを.claude/commandsにコピー
-cp -r commands ~/.claude/commands/
-
-# または、プロジェクトディレクトリ内で
-mkdir -p .claude
-cp -r commands .claude/
-```
-
-#### オプション：プロジェクト固有のルール設定
+#### プロジェクト固有のルール設定
 
 セットアップ後、プロジェクト固有のルールや設定を追加できます。
 `docs/rule/{種類1}/{種類2}` ディレクトリ構造でファイルを配置すると、対応するコマンド実行時に自動で読み込まれます。

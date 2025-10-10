@@ -4,7 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 概要
 
-TsumikiはAI駆動開発フレームワークのコマンドテンプレートを提供するCLIツールです。このプロジェクトはTypeScript + ReactをInkで構成されたCLIアプリケーションで、Claude Code用のコマンドテンプレートをユーザーの`.claude/commands/`ディレクトリにインストールします。
+TsumikiはAI駆動開発フレームワークです。Claude Code Plugin経由でインストールされ、要件定義から実装までのAI支援開発プロセスを提供します。
+
+このリポジトリには以下が含まれています：
+- **`commands/`**: Claude Codeスラッシュコマンド用のテンプレートファイル（`.md`と`.sh`）
+- **`agents/`**: Claude Codeエージェント用の定義ファイル（`.md`）
+- **`.claude-plugin/`**: Claude Code Plugin設定ファイル
 
 ## 開発コマンド
 
@@ -12,14 +17,9 @@ TsumikiはAI駆動開発フレームワークのコマンドテンプレート�
 # 開発環境
 pnpm install                # 依存関係のインストール
 
-# ビルド
-pnpm build                  # プロジェクトをビルドし、commandsディレクトリをdist/にコピー
-pnpm build:run              # ビルド後、CLI実行（テスト用）
-
 # コード品質
-pnpm check                  # Biomeでコードチェック
+pnpm check                  # Biomeでコードチェック（commands/とagents/）
 pnpm fix                    # Biomeで自動修正
-pnpm typecheck              # TypeScriptの型チェック（tsgoを使用）
 pnpm secretlint             # シークレット情報の検査
 
 # pre-commitフック
@@ -28,40 +28,35 @@ pnpm prepare                # simple-git-hooksのセットアップ
 
 ## プロジェクト構造
 
-- **`src/cli.ts`**: CLIエントリーポイント、commanderを使用してコマンド定義
-- **`src/commands/install.tsx`**: React + Inkを使用したインストールコマンドのUI実装
 - **`commands/`**: TsumikiのAI開発フレームワーク用Claude Codeコマンドテンプレート（`.md`と`.sh`ファイル）
-- **`dist/`**: ビルド出力、`dist/commands/`にテンプレートがコピーされる
+- **`agents/`**: Claude Codeエージェント定義（`.md`ファイル）
+- **`.claude-plugin/`**: Claude Code Plugin設定（marketplace.json, plugin.json）
+- **`book/`**: 開発ガイドとドキュメント
 
 ## 技術スタック
 
-- **CLI Framework**: Commander.js
-- **UI Framework**: React + Ink（CLIでのReactレンダリング）
-- **Build Tool**: tsup（TypeScript + ESBuildベース）
 - **Code Quality**: Biome（リンタ・フォーマッタ）
-- **TypeScript**: tsgo（高速型チェック）
+- **Security**: secretlint（機密情報検査）
 - **Package Manager**: pnpm
+- **Distribution**: Claude Code Plugin Marketplace
 
-## ビルドプロセス
+## インストール方法
 
-ビルド時（`pnpm build`）は以下の処理が実行されます：
-1. `dist`ディレクトリをクリーンアップ
-2. `dist/commands`ディレクトリを作成
-3. `commands/`内の`.md`と`.sh`ファイルを`dist/commands/`にコピー
-4. tsupでTypeScriptコードをESMとCJSの両形式でビルド
+ユーザーは以下のコマンドでTsumikiをインストールします：
 
-## インストール動作
+```bash
+/plugin marketplace add https://github.com/classmethod/tsumiki.git
+```
 
-`tsumiki install`コマンドは以下を実行します：
-1. 現在のディレクトリに`.claude/commands/`ディレクトリを作成
-2. ビルド済みの`dist/commands/`から全ての`.md`と`.sh`ファイルをコピー
-3. React + Inkでプログレス表示とファイル一覧を表示
+Claude Code Pluginが自動的に：
+1. リポジトリから`commands/`と`agents/`のファイルを読み込み
+2. `.claude-plugin/plugin.json`の設定に従ってコマンドとエージェントを登録
+3. `/tsumiki:` プレフィックス付きでコマンドを使用可能にする
 
 ## 品質管理
 
 Pre-commitフックで以下が自動実行されます：
 - `pnpm secretlint`: 機密情報のチェック
-- `pnpm typecheck`: 型チェック
 - `pnpm fix`: コードの自動修正
 
-コード修正時は必ず`pnpm check`と`pnpm typecheck`を実行してからコミットしてください。
+コマンドファイル（`.md`）やエージェント定義（`.md`）を修正する際は、必ず`pnpm check`を実行してからコミットしてください。

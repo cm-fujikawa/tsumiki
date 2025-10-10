@@ -10,21 +10,12 @@ Tsumikiを使用するには、次のClaude Code Pluginコマンドでインス�
 
 ```bash
 /plugin marketplace add https://github.com/classmethod/tsumiki.git
+/plugin install tsumiki@tsumiki 
 ```
 
 このコマンドを実行すると、TsumikiのClaude Codeスラッシュコマンドとエージェントが自動的にインストールされます。
 
-**注意**: Claude Code Pluginでインストールした場合、コマンドは `/tsumiki:` プレフィックス付きで実行します（例：`/tsumiki:kairo-requirements`）。
-
-### 非推奨：npxによるインストール
-
-以下の方法でもインストール可能ですが、今後はClaude Code Plugin方式を推奨します：
-
-```bash
-npx tsumiki install
-```
-
-このコマンドを実行すると、`.claude/commands/` にTsumikiのClaude Codeスラッシュコマンドがインストールされます。
+**注意**: コマンドは `/tsumiki:` プレフィックス付きで実行します（例：`/tsumiki:kairo-requirements`）。
 
 ## 概要
 
@@ -120,7 +111,7 @@ Kairoは要件定義から実装までの開発プロセスを自動化・支援
 
 [rulesync](https://github.com/dyoshikawa/rulesync)を組み合わせて使用することで、Claude Code以外のツールでもtsumikiのコマンドを使用できます。
 
-`tsumiki install` 後、プロジェクトルートで以下のコマンドを実行します。
+プロジェクトルートで以下のコマンドを実行します。
 
 ```
 npx -y rulesync init
