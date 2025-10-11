@@ -46,6 +46,7 @@ pnpm prepare                # simple-git-hooksのセットアップ
 
 ```bash
 /plugin marketplace add https://github.com/classmethod/tsumiki.git
+/plugin install tsumiki@tsumiki 
 ```
 
 Claude Code Pluginが自動的に：
