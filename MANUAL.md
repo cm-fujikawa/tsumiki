@@ -284,7 +284,7 @@ Kairoは各タスクに対して内部的にTDDコマンドを使用して以下
 ## ディレクトリ構造
 
 ```
-/projects/ai/test18/
+./
 ├── .claude/
 │   └── commands/           # Kairoコマンド
 ├── docs/

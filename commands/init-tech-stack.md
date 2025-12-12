@@ -13,421 +13,442 @@ description: プロジェクトの初期設定として技術スタックの選�
 - プロジェクトルートディレクトリで実行
 - `docs/` ディレクトリが存在する（なければ作成）
 
-## 実行内容
+## 実行フロー
 
-段階的なヒアリングを通じて技術選択を行い、最終的に `docs/tech-stack.md` を生成します。
+このコマンドは、**AskUserQuestionツール**を使用して段階的にヒアリングを行います。
 
-## ヒアリングフロー
+### Phase 1: プロジェクト基本情報の収集
 
-### Phase 1: プロジェクト基本情報
+まず、以下の3つの質問をAskUserQuestionツールで同時に提示してください：
 
-まず、プロジェクトの基本情報をお聞かせください。
+```
+AskUserQuestion({
+  questions: [
+    {
+      question: "プロジェクトのタイプを教えてください",
+      header: "プロジェクト",
+      multiSelect: false,
+      options: [
+        { label: "Webアプリケーション", description: "ブラウザで動作するアプリケーション" },
+        { label: "モバイルアプリ", description: "スマートフォン/タブレット向けアプリ" },
+        { label: "API/バックエンド", description: "API提供がメインのサービス" },
+        { label: "デスクトップアプリ", description: "PC向けネイティブアプリ" },
+        { label: "ライブラリ/SDK", description: "他の開発者向けのツール" },
+        { label: "フルスタック", description: "フロントエンドとバックエンドの両方" }
+      ]
+    },
+    {
+      question: "開発チームの規模を教えてください",
+      header: "チーム規模",
+      multiSelect: false,
+      options: [
+        { label: "個人開発", description: "1人で開発" },
+        { label: "小規模チーム", description: "2-5人" },
+        { label: "中規模チーム", description: "6-15人" },
+        { label: "大規模チーム", description: "16人以上" }
+      ]
+    },
+    {
+      question: "予定している開発期間はどの程度ですか？",
+      header: "開発期間",
+      multiSelect: false,
+      options: [
+        { label: "プロトタイプ/MVP", description: "1-2ヶ月" },
+        { label: "短期プロジェクト", description: "3-6ヶ月" },
+        { label: "中期プロジェクト", description: "6ヶ月-1年" },
+        { label: "長期プロジェクト", description: "1年以上" }
+      ]
+    }
+  ]
+})
+```
 
-#### 質問1: プロジェクトタイプ
-以下から最も近いものを選択してください：
+### Phase 2: 技術制約・要件の収集
 
-1. **Webアプリケーション** - ブラウザで動作するアプリケーション
-2. **モバイルアプリ** - スマートフォン/タブレット向けアプリ
-3. **API/バックエンドサービス** - API提供がメインのサービス
-4. **デスクトップアプリケーション** - PC向けネイティブアプリ
-5. **ライブラリ/SDK** - 他の開発者向けのツール
-6. **フルスタック（Web + API）** - フロントエンドとバックエンドの両方
-7. **その他** - 上記以外
+次に、以下の3つの質問をAskUserQuestionツールで同時に提示してください：
 
-**あなたの選択**: [ユーザー入力を待つ]
+```
+AskUserQuestion({
+  questions: [
+    {
+      question: "既存のシステムやデータベースとの連携はありますか？",
+      header: "既存連携",
+      multiSelect: false,
+      options: [
+        { label: "新規構築", description: "全て新しく作成" },
+        { label: "既存DB連携", description: "既存データベースを使用" },
+        { label: "既存API連携", description: "既存のAPIと連携" },
+        { label: "レガシー移行", description: "既存システムからの移行" }
+      ]
+    },
+    {
+      question: "想定される負荷や性能要件を教えてください",
+      header: "パフォーマンス",
+      multiSelect: false,
+      options: [
+        { label: "軽負荷", description: "同時利用者数10人以下、レスポンス3秒以内" },
+        { label: "中負荷", description: "同時利用者数100人程度、レスポンス1秒以内" },
+        { label: "高負荷", description: "同時利用者数1000人以上、レスポンス0.5秒以内" },
+        { label: "未定/不明", description: "まだ詳細は決まっていない" }
+      ]
+    },
+    {
+      question: "セキュリティの重要度を教えてください",
+      header: "セキュリティ",
+      multiSelect: false,
+      options: [
+        { label: "基本レベル", description: "一般的なWebセキュリティ対策" },
+        { label: "高度", description: "個人情報取り扱い、金融系など" },
+        { label: "エンタープライズ", description: "企業向け、コンプライアンス要件あり" },
+        { label: "未定/不明", description: "まだ詳細は決まっていない" }
+      ]
+    }
+  ]
+})
+```
 
----
+### Phase 3: チーム・スキル状況の収集
 
-#### 質問2: プロジェクト規模
-開発チームの規模を教えてください：
+次に、以下の2つの質問をAskUserQuestionツールで同時に提示してください：
 
-1. **個人開発** - 1人で開発
-2. **小規模チーム** - 2-5人
-3. **中規模チーム** - 6-15人  
-4. **大規模チーム** - 16人以上
+```
+AskUserQuestion({
+  questions: [
+    {
+      question: "チームメンバーの技術経験を教えてください（複数選択可）",
+      header: "技術スキル",
+      multiSelect: true,
+      options: [
+        { label: "JavaScript/TypeScript", description: "経験豊富" },
+        { label: "Python", description: "経験豊富" },
+        { label: "Java/Kotlin", description: "経験豊富" },
+        { label: "C#/.NET", description: "経験豊富" },
+        { label: "Go/Rust", description: "経験豊富" },
+        { label: "React/Vue/Angular", description: "経験豊富" },
+        { label: "データベース設計", description: "経験豊富" },
+        { label: "クラウド(AWS/Azure/GCP)", description: "経験豊富" },
+        { label: "Docker/Kubernetes", description: "経験豊富" },
+        { label: "技術スキル限定的", description: "学習しながら進めたい" }
+      ]
+    },
+    {
+      question: "新しい技術の習得についてどう考えますか？",
+      header: "学習コスト",
+      multiSelect: false,
+      options: [
+        { label: "積極的に新技術", description: "最新技術でチャレンジしたい" },
+        { label: "バランス重視", description: "新技術と安定技術のバランス" },
+        { label: "安定技術優先", description: "枯れた技術で確実に開発" },
+        { label: "既存スキル活用", description: "チームの知識を最大限活用" }
+      ]
+    }
+  ]
+})
+```
 
-**あなたの選択**: [ユーザー入力を待つ]
+### Phase 4: 運用・インフラ要件の収集
 
----
+最後に、以下の2つの質問をAskUserQuestionツールで同時に提示してください：
 
-#### 質問3: 開発期間
-予定している開発期間はどの程度ですか？
-
-1. **プロトタイプ/MVP** - 1-2ヶ月
-2. **短期プロジェクト** - 3-6ヶ月
-3. **中期プロジェクト** - 6ヶ月-1年
-4. **長期プロジェクト** - 1年以上
-
-**あなたの選択**: [ユーザー入力を待つ]
-
----
-
-### Phase 2: 技術制約・要件
-
-#### 質問4: 既存システム連携
-既存のシステムやデータベースとの連携はありますか？
-
-1. **新規構築** - 全て新しく作成
-2. **既存DB連携あり** - 既存データベースを使用
-3. **既存API連携あり** - 既存のAPIと連携
-4. **レガシーシステム移行** - 既存システムからの移行
-5. **その他連携要件あり** - 具体的に教えてください
-
-**あなたの選択**: [ユーザー入力を待つ]
-
-**既存技術がある場合は具体的に**: [ユーザー入力を待つ]
-
----
-
-#### 質問5: パフォーマンス要件
-想定される負荷や性能要件を教えてください：
-
-1. **軽負荷** - 同時利用者数10人以下、レスポンス時間3秒以内
-2. **中負荷** - 同時利用者数100人程度、レスポンス時間1秒以内
-3. **高負荷** - 同時利用者数1000人以上、レスポンス時間0.5秒以内
-4. **未定/不明** - まだ詳細は決まっていない
-
-**あなたの選択**: [ユーザー入力を待つ]
-
----
-
-#### 質問6: セキュリティ要件
-セキュリティの重要度を教えてください：
-
-1. **基本的なセキュリティ** - 一般的なWebセキュリティ対策
-2. **高度なセキュリティ** - 個人情報取り扱い、金融系など
-3. **エンタープライズレベル** - 企業向け、コンプライアンス要件あり
-4. **未定/不明** - まだ詳細は決まっていない
-
-**あなたの選択**: [ユーザー入力を待つ]
-
----
-
-### Phase 3: チーム・スキル状況
-
-#### 質問7: チームの技術スキル
-チームメンバーの技術経験を教えてください（複数選択可）：
-
-1. **JavaScript/TypeScript** - 経験豊富
-2. **Python** - 経験豊富  
-3. **Java/Kotlin** - 経験豊富
-4. **C#/.NET** - 経験豊富
-5. **PHP** - 経験豊富
-6. **Go/Rust** - 経験豊富
-7. **React/Vue/Angular** - 経験豊富
-8. **データベース設計** - 経験豊富
-9. **クラウド（AWS/Azure/GCP）** - 経験豊富
-10. **Docker/Kubernetes** - 経験豊富
-11. **技術スキルは限定的** - 学習しながら進めたい
-
-**あなたの選択（複数可）**: [ユーザー入力を待つ]
-
----
-
-#### 質問8: 学習コスト許容度
-新しい技術の習得についてどう考えますか？
-
-1. **積極的に新技術を導入したい** - 最新技術でチャレンジしたい
-2. **バランス重視** - 新技術と安定技術のバランスを取りたい
-3. **安定技術優先** - 枯れた技術で確実に開発したい
-4. **既存スキル活用** - チームが知っている技術を最大限活用したい
-
-**あなたの選択**: [ユーザー入力を待つ]
-
----
-
-### Phase 4: 運用・インフラ要件
-
-#### 質問9: デプロイ・ホスティング
-アプリケーションをどこで動かす予定ですか？
-
-1. **クラウド（AWS/Azure/GCP）** - パブリッククラウド
-2. **PaaS（Vercel/Netlify/Heroku）** - 簡単デプロイ重視
-3. **VPS/専用サーバー** - 自前サーバー
-4. **オンプレミス** - 社内サーバー
-5. **未定** - まだ決まっていない
-
-**あなたの選択**: [ユーザー入力を待つ]
-
----
-
-#### 質問10: 予算制約
-開発・運用コストについて教えてください：
-
-1. **コスト最小化** - 無料・低コストツール優先
-2. **バランス重視** - 適度なコストは許容
-3. **品質重視** - コストより品質・効率を優先
-4. **予算潤沢** - 最適なツールを選択可能
-
-**あなたの選択**: [ユーザー入力を待つ]
-
----
+```
+AskUserQuestion({
+  questions: [
+    {
+      question: "アプリケーションをどこで動かす予定ですか？",
+      header: "ホスティング",
+      multiSelect: false,
+      options: [
+        { label: "クラウド", description: "AWS/Azure/GCP" },
+        { label: "PaaS", description: "Vercel/Netlify/Heroku" },
+        { label: "VPS/専用サーバー", description: "自前サーバー" },
+        { label: "オンプレミス", description: "社内サーバー" },
+        { label: "未定", description: "まだ決まっていない" }
+      ]
+    },
+    {
+      question: "開発・運用コストについて教えてください",
+      header: "予算制約",
+      multiSelect: false,
+      options: [
+        { label: "コスト最小化", description: "無料・低コストツール優先" },
+        { label: "バランス重視", description: "適度なコストは許容" },
+        { label: "品質重視", description: "コストより品質・効率を優先" },
+        { label: "予算潤沢", description: "最適なツールを選択可能" }
+      ]
+    }
+  ]
+})
+```
 
 ## 技術スタック推奨ロジック
 
-### 推奨アルゴリズム
+全ての回答を収集した後、以下のロジックで技術を推奨してください：
 
-ユーザーの回答に基づいて以下のロジックで技術を推奨：
+### フロントエンド選択ロジック
 
-#### フロントエンド選択
 ```
 IF プロジェクトタイプ == "Webアプリケーション" OR "フルスタック"
   IF チーム経験に "React/Vue/Angular" あり
-    IF 学習コスト許容度 == "積極的"
-      推奨: React 18 + TypeScript (最新技術)
+    IF 学習コスト許容度 == "積極的に新技術"
+      推奨: React 19 + TypeScript 5.7+ + Vite 6 (最新技術)
     ELSE
-      推奨: React 18 + JavaScript (安定性重視)
-  ELSE IF JavaScript経験あり
-    推奨: Vue 3 + TypeScript (学習コスト低)
+      推奨: React 18.3 + TypeScript 5.7+ + Vite 6 (安定性重視)
+  ELSE IF "JavaScript/TypeScript" 経験あり
+    推奨: Vue 3.5+ + TypeScript 5.7+ + Vite 6 (学習コスト低)
   ELSE
-    推奨: Next.js (フルスタック簡単)
+    推奨: Next.js 15 + TypeScript 5.7+ (フルスタック簡単)
 ```
 
-#### バックエンド選択  
+### バックエンド選択ロジック
+
 ```
-IF JavaScript経験豊富
-  推奨: Node.js + Express/Fastify
-ELSE IF Python経験豊富  
-  推奨: FastAPI/Django
-ELSE IF 他言語経験豊富
-  その言語のフレームワーク推奨
+IF "JavaScript/TypeScript" 経験豊富
+  IF 学習コスト許容度 == "積極的に新技術"
+    推奨: Node.js 22 LTS + Fastify 5 + TypeScript 5.7+ (高速)
+  ELSE
+    推奨: Node.js 22 LTS + Express 5 + TypeScript 5.7+ (安定)
+ELSE IF "Python" 経験豊富
+  IF パフォーマンス要件 == "高負荷"
+    推奨: FastAPI 0.115+ (Python 3.12+) (高速API)
+  ELSE
+    推奨: Django 5.1+ (Python 3.12+) (フルフィーチャー)
+ELSE IF "Java/Kotlin" 経験豊富
+  推奨: Spring Boot 3.4+ (Kotlin 2.1+, Java 21+)
+ELSE IF "C#/.NET" 経験豊富
+  推奨: ASP.NET Core 9 (.NET 9)
+ELSE IF "Go/Rust" 経験豊富
+  推奨: Go 1.23+ (Gin 1.10+ / Fiber 3) または Rust 1.83+ (Actix-web 4)
 ELSE
-  推奨: Node.js (フロントエンドとの統一)
+  推奨: Node.js 22 LTS + Express 5 (フロントエンドとの統一)
 ```
 
-#### データベース選択
+### データベース選択ロジック
+
 ```
 IF パフォーマンス要件 == "高負荷"
-  推奨: PostgreSQL + Redis
-ELSE IF セキュリティ要件 == "高度"
-  推奨: PostgreSQL
-ELSE IF プロジェクト規模 == "個人" OR "小規模"
-  推奨: SQLite → PostgreSQL (段階移行)
+  推奨: PostgreSQL 17+ + Redis 7.4+ (スケーラビリティ)
+ELSE IF セキュリティ要件 == "高度" OR "エンタープライズ"
+  推奨: PostgreSQL 17+ (ACID準拠、堅牢)
+ELSE IF プロジェクト規模 == "個人開発" AND 開発期間 == "プロトタイプ/MVP"
+  推奨: SQLite 3.47+ → PostgreSQL 17+ (段階移行)
 ELSE
-  推奨: PostgreSQL
+  推奨: PostgreSQL 17+ (汎用的)
 ```
 
-### 推奨結果表示
+### 開発環境・ツール選択ロジック
 
-各フェーズの回答後、ライブラリの最新バージョンやLTS版を検索して、以下の形式で推奨結果を表示：
+```
+コンテナ:
+  推奨: Docker 27+ + Docker Compose v2 (全プロジェクト共通)
+
+パッケージマネージャー:
+IF 言語 == "Python"
+  推奨: uv (最速・モダン)
+ELSE IF 言語 == "Node.js/TypeScript"
+  推奨: pnpm 9+ (高速・ディスク効率)
+ELSE IF 言語 == "Java/Kotlin"
+  推奨: Gradle 8.12+ (Kotlin DSL)
+
+テストツール:
+IF フロントエンド == React系 AND ビルドツール == Vite
+  推奨: Vitest 2+ + Testing Library (高速統合)
+ELSE IF フロントエンド == Vue系
+  推奨: Vitest 2+ + Vue Test Utils
+ELSE IF バックエンド == Python
+  推奨: pytest 8+ + pytest-asyncio
+ELSE IF バックエンド == Java/Kotlin
+  推奨: JUnit 5 + Kotest
+
+E2Eテスト:
+  推奨: Playwright 1.49+ (全言語対応・高速・信頼性高)
+
+リンター・フォーマッター:
+IF 言語 == "Python"
+  推奨: Ruff 0.8+ (最速オールインワン)
+ELSE IF 言語 == "TypeScript/JavaScript"
+  推奨: Biome 1.9+ (最速) または ESLint 9+ + Prettier 3+
+ELSE IF 言語 == "Kotlin"
+  推奨: ktlint 1.5+ + detekt 1.23+
+```
+
+## 推奨結果の表示
+
+全ての回答に基づいて、以下の形式で推奨結果をマークダウンで表示してください：
 
 ```markdown
 # あなたの回答に基づく技術スタック推奨
 
 ## 📋 回答サマリー
-- プロジェクトタイプ: Webアプリケーション
-- 規模: 小規模チーム（3人）
-- 期間: 中期プロジェクト（8ヶ月）
-- 技術スキル: JavaScript/TypeScript経験豊富
-- 学習コスト許容度: バランス重視
+- プロジェクトタイプ: [回答]
+- チーム規模: [回答]
+- 開発期間: [回答]
+- 既存連携: [回答]
+- パフォーマンス: [回答]
+- セキュリティ: [回答]
+- 技術スキル: [回答（複数の場合はカンマ区切り）]
+- 学習コスト許容度: [回答]
+- ホスティング: [回答]
+- 予算: [回答]
 
 ## 🚀 推奨技術スタック
 
 ### フロントエンド
-✅ **React 18 + TypeScript**
-   - 理由: チームのReact経験を活かせます
-   - メリット: 豊富なエコシステム、求人市場での優位性
-   - 学習コスト: 中（既存経験あり）
+✅ **[推奨技術]**
+   - 理由: [選択理由]
+   - メリット: [メリット]
+   - 学習コスト: [低/中/高]
 
-⚠️ **Vue 3 + TypeScript** （代替案）
-   - 理由: より学習コストが低い
-   - メリット: シンプルな構文、段階的導入可能
-   - 学習コスト: 低
-
-❌ **Angular** （非推奨）
-   - 理由: 中期プロジェクトには重すぎる
-   - デメリット: 学習コスト高、小規模チームに不向き
+⚠️ **[代替案]** （代替案）
+   - 理由: [選択理由]
+   - メリット: [メリット]
+   - 学習コスト: [低/中/高]
 
 ### バックエンド
-✅ **Node.js + Express + TypeScript**
-   - 理由: フロントエンドとの言語統一
-   - メリット: 開発効率、人材リソースの有効活用
-   - 学習コスト: 低（既存JavaScript経験）
+✅ **[推奨技術]**
+   - 理由: [選択理由]
+   - メリット: [メリット]
+   - 学習コスト: [低/中/高]
 
 ### データベース
-✅ **PostgreSQL**
-   - 理由: 中期プロジェクトの成長に対応
-   - メリット: ACID準拠、拡張性、JSON対応
-   - 学習コスト: 中
+✅ **[推奨技術]**
+   - 理由: [選択理由]
+   - メリット: [メリット]
+   - 学習コスト: [低/中/高]
 
-✅ **Redis** （キャッシュ）
-   - 理由: パフォーマンス向上
-   - メリット: セッション管理、高速キャッシュ
-   - 学習コスト: 低
-
-### 開発環境
-✅ **Docker + Docker Compose**
-   - 理由: 環境統一、デプロイ簡素化
-   - メリット: 開発環境の一貫性
-   - 学習コスト: 中
-
-✅ **Jest + Testing Library**
-   - 理由: React標準、TypeScript親和性
-   - メリット: 豊富なドキュメント
-   - 学習コスト: 低
+### 開発環境・ツール
+✅ **[コンテナ技術]**
+✅ **[テストツール]**
+✅ **[E2Eテスト]**
+✅ **[リンター・フォーマッター]**: ESLint + Prettier
 
 ## ⚙️ 整合性チェック
 
-✅ **技術選択の整合性**: 問題なし
-- React + Node.js: 言語統一によるシナジー効果
-- TypeScript: フロント・バック全体での型安全性
-- PostgreSQL: 将来の成長に対応可能
+✅ **技術選択の整合性**: [問題なし/要確認]
+- [整合性の説明]
 
-✅ **チームスキルとのマッチング**: 良好
-- 既存JavaScript/TypeScript経験を最大活用
-- 学習が必要な新技術は最小限
+✅ **チームスキルとのマッチング**: [良好/要学習あり]
+- [マッチング状況の説明]
 
-✅ **プロジェクト要件との適合性**: 適合
-- 中期プロジェクト向けの拡張性
-- 小規模チームでの管理容易性
-
-この推奨で進めますか？
-
-1. **はい** - この推奨で `docs/tech-stack.md` を生成
-2. **一部変更したい** - 個別技術を調整
-3. **全体的に見直したい** - ヒアリングからやり直し
-
-**あなたの選択**: [ユーザー入力を待つ]
+✅ **プロジェクト要件との適合性**: [適合/一部要調整]
+- [適合性の説明]
 ```
 
-## カスタマイズ対応
+## 最終確認
 
-「一部変更したい」を選択された場合：
+推奨結果を表示した後、以下の質問をAskUserQuestionツールで提示してください：
 
-```markdown
-# 技術スタックのカスタマイズ
-
-どの部分を変更しますか？
-
-1. **フロントエンド** (現在: React 18 + TypeScript)
-2. **バックエンド** (現在: Node.js + Express + TypeScript)  
-3. **データベース** (現在: PostgreSQL + Redis)
-4. **開発環境・ツール** (現在: Docker, Jest等)
-5. **全て確認して個別調整**
-
-**選択**: [ユーザー入力を待つ]
-
----
-
-## フロントエンドの変更
-
-現在の推奨: **React 18 + TypeScript**
-
-利用可能な選択肢：
-
-1. **React 18 + TypeScript** ⭐ (現在の推奨)
-2. **React 18 + JavaScript** - TypeScriptを使わない場合
-3. **Vue 3 + TypeScript** - より軽量なフレームワーク
-4. **Vue 3 + JavaScript** - 最も学習コストが低い
-5. **Next.js + TypeScript** - フルスタックフレームワーク
-6. **Svelte/SvelteKit** - 新しいアプローチ
-7. **Angular + TypeScript** - エンタープライズ向け
-8. **Vanilla JavaScript + TypeScript** - フレームワークなし
-9. **その他** - 具体的に指定
-
-**あなたの選択**: [ユーザー入力を待つ]
-
-**選択理由があれば**: [ユーザー入力を待つ]
+```
+AskUserQuestion({
+  questions: [
+    {
+      question: "この推奨で進めますか？",
+      header: "最終確認",
+      multiSelect: false,
+      options: [
+        { label: "はい", description: "この推奨でdocs/tech-stack.mdを生成" },
+        { label: "一部変更したい", description: "個別技術を調整" },
+        { label: "やり直し", description: "ヒアリングからやり直す" }
+      ]
+    }
+  ]
+})
 ```
 
-## 最終生成処理
+### 「はい」を選択された場合
 
-最終確認後、以下の処理を実行：
-
-1. **ディレクトリ作成**
-```bash
-mkdir -p docs
-```
-
-2. **`docs/tech-stack.md` 生成**
-
-生成されるファイル例：
+`docs/tech-stack.md` ファイルを生成してください。テンプレートは以下の通り：
 
 ```markdown
 # プロジェクト技術スタック定義
 
 ## 🔧 生成情報
-- **生成日**: 2025-01-08
-- **生成ツール**: init-tech-stack.md
-- **プロジェクトタイプ**: Webアプリケーション
-- **チーム規模**: 小規模チーム（3人）
-- **開発期間**: 中期プロジェクト（8ヶ月）
+- **生成日**: [YYYY-MM-DD]
+- **生成ツール**: init-tech-stack
+- **プロジェクトタイプ**: [回答]
+- **チーム規模**: [回答]
+- **開発期間**: [回答]
 
 ## 🎯 プロジェクト要件サマリー
-- **パフォーマンス**: 中負荷（同時利用者数100人程度）
-- **セキュリティ**: 基本的なWebセキュリティ対策
-- **技術スキル**: JavaScript/TypeScript経験豊富
-- **学習コスト許容度**: バランス重視
-- **デプロイ先**: クラウド（AWS/Azure/GCP）
-- **予算**: バランス重視
+- **パフォーマンス**: [回答]
+- **セキュリティ**: [回答]
+- **技術スキル**: [回答]
+- **学習コスト許容度**: [回答]
+- **デプロイ先**: [回答]
+- **予算**: [回答]
 
 ## 🚀 フロントエンド
-- **フレームワーク**: React 18.2
-- **言語**: TypeScript 5.0+
-- **状態管理**: Redux Toolkit
-- **UIライブラリ**: Material-UI v5
-- **バンドラー**: Vite
-- **ルーティング**: React Router v6
+- **フレームワーク**: [技術名とバージョン]
+- **言語**: [言語とバージョン]
+- **状態管理**: [選択されたツール]
+- **バンドラー**: [選択されたツール]
+- **ルーティング**: [選択されたツール]
 
 ### 選択理由
-- チームのReact経験を活かせる
-- TypeScriptで型安全性を確保
-- Material-UIで開発速度向上
-- Viteで高速な開発環境
+- [理由1]
+- [理由2]
+- [理由3]
 
 ## ⚙️ バックエンド
-- **フレームワーク**: Express.js 4.18
-- **言語**: TypeScript 5.0+
-- **データベース**: PostgreSQL 15
-- **ORM**: Prisma
-- **認証**: JWT + Refresh Token
-- **キャッシュ**: Redis 7+
+- **フレームワーク**: [技術名とバージョン]
+- **言語**: [言語とバージョン]
+- **データベース**: [データベース名とバージョン]
+- **ORM**: [選択されたツール]
+- **認証**: [選択された方式]
+- **キャッシュ**: [選択されたツール（必要な場合）]
 
 ### 選択理由
-- フロントエンドとの言語統一
-- Prismaで型安全なDB操作
-- PostgreSQLで将来のスケーリングに対応
-- Redisでセッション管理とキャッシュ
+- [理由1]
+- [理由2]
+- [理由3]
 
 ## 💾 データベース設計
-- **メインDB**: PostgreSQL 15+
-- **キャッシュ**: Redis 7+
-- **ファイルストレージ**: AWS S3 / Azure Blob (本番), ローカル (開発)
+- **メインDB**: [データベース名とバージョン]
+- **キャッシュ**: [キャッシュツール（必要な場合）]
+- **ファイルストレージ**: [ストレージ戦略]
 
 ### 設計方針
-- ACID準拠のトランザクション
-- JSON型でNoSQL的な柔軟性も確保
-- インデックス戦略でクエリ最適化
-- 適切な正規化レベル
+- [方針1]
+- [方針2]
+- [方針3]
 
 ## 🛠️ 開発環境
 - **コンテナ**: Docker + Docker Compose
-- **パッケージマネージャー**: npm
-- **Node.js**: 18+ LTS
+- **パッケージマネージャー**:
+  - Python: uv (高速・モダン)
+  - Node.js: pnpm (高速・ディスク効率)
+  - Java/Kotlin: Gradle (Kotlin DSL)
+- **ランタイムバージョン**: [バージョン情報]
 
 ### 開発ツール
-- **テストフレームワーク**: Jest
-- **テストライブラリ**: React Testing Library
-- **E2Eテスト**: Playwright
-- **リンター**: ESLint + Prettier
-- **型チェック**: TypeScript
+- **テストフレームワーク**:
+  - Python: pytest + pytest-asyncio
+  - TypeScript/JavaScript: Vitest (Vite使用時) / Jest (その他)
+  - Java/Kotlin: JUnit 5 + Kotest
+- **E2Eテスト**: Playwright (全言語対応・高速・信頼性高)
+- **リンター・フォーマッター**:
+  - Python: Ruff (高速・オールインワン)
+  - TypeScript/JavaScript: Biome (高速) / ESLint + Prettier
+  - Java/Kotlin: ktlint + detekt
+- **型チェック**:
+  - Python: mypy
+  - TypeScript: tsc (TypeScript Compiler)
 
 ### CI/CD
-- **CI/CD**: GitHub Actions
-- **コード品質**: ESLint, Prettier, TypeScript
+- **CI/CD**: GitHub Actions (推奨)
+- **コード品質**: ESLint, Prettier, [型チェック]
 - **テスト**: Unit, Integration, E2E
 - **デプロイ**: 自動デプロイ with approval
 
 ## ☁️ インフラ・デプロイ
-- **フロントエンド**: Vercel / Netlify
-- **バックエンド**: AWS ECS / Azure Container Apps
-- **データベース**: AWS RDS / Azure Database
-- **キャッシュ**: AWS ElastiCache / Azure Cache
-- **CDN**: CloudFlare / AWS CloudFront
+- **フロントエンド**: [デプロイ先]
+- **バックエンド**: [デプロイ先]
+- **データベース**: [DBホスティング]
+- **キャッシュ**: [キャッシュホスティング（該当する場合）]
+- **CDN**: [CDNサービス（該当する場合）]
 
 ## 🔒 セキュリティ
 - **HTTPS**: 必須 (証明書自動更新)
-- **認証**: JWT + Refresh Token
+- **認証**: [認証方式]
 - **CORS**: 適切な設定
 - **バリデーション**: サーバーサイドバリデーション
 - **環境変数**: 機密情報の適切な管理
@@ -436,79 +457,73 @@ mkdir -p docs
 ## 📊 品質基準
 - **テストカバレッジ**: 80%以上
 - **コード品質**: ESLint + Prettier
-- **型安全性**: TypeScript strict mode
-- **パフォーマンス**: Lighthouse 90+点
-- **アクセシビリティ**: WCAG 2.1 AA準拠
+- **型安全性**: [型安全性要件]
+- **パフォーマンス**: Lighthouse 90+点（Web系の場合）
+- **アクセシビリティ**: WCAG 2.1 AA準拠（Web系の場合）
 
 ## 📁 推奨ディレクトリ構造
 
 ```
-project-root/
-├── frontend/                 # React アプリケーション
+./ (カレントディレクトリ = プロジェクトルート)
+├── frontend/                 # フロントエンド
 │   ├── src/
-│   │   ├── components/       # 再利用可能コンポーネント
+│   │   ├── components/      # Reactコンポーネント
 │   │   ├── pages/           # ページコンポーネント
 │   │   ├── hooks/           # カスタムフック
-│   │   ├── store/           # Redux store
-│   │   ├── types/           # 型定義
-│   │   └── utils/           # ユーティリティ
+│   │   ├── utils/           # ユーティリティ関数
+│   │   ├── types/           # TypeScript型定義
+│   │   ├── api/             # APIクライアント
+│   │   └── App.tsx
 │   ├── public/              # 静的ファイル
+│   ├── tests/               # テスト
 │   ├── package.json
-│   └── vite.config.ts
-├── backend/                 # Express API
-│   ├── src/
-│   │   ├── controllers/     # API コントローラー
+│   ├── tsconfig.json
+│   ├── vite.config.ts       # or next.config.js
+│   └── tailwind.config.js
+├── backend/                  # バックエンド
+│   ├── app/                 # (Python/FastAPI/Djangoの場合)
+│   │   ├── main.py          # エントリポイント
+│   │   ├── api/             # APIルート
+│   │   │   └── v1/
+│   │   ├── core/            # 設定・セキュリティ
+│   │   ├── models/          # ORMモデル
+│   │   ├── schemas/         # スキーマ定義
 │   │   ├── services/        # ビジネスロジック
-│   │   ├── models/          # データモデル
-│   │   ├── middleware/      # Express ミドルウェア
-│   │   ├── routes/          # API ルート定義
-│   │   ├── types/           # 型定義
+│   │   ├── db/              # データベース接続
 │   │   └── utils/           # ユーティリティ
-│   ├── prisma/              # データベーススキーマ
-│   ├── tests/               # テストファイル
-│   ├── package.json
-│   └── tsconfig.json
-├── docs/                    # プロジェクトドキュメント
-├── docker-compose.yml       # 開発環境
-└── README.md               # プロジェクト概要
+│   ├── src/                 # (Node.js/Java/Kotlin/Go等の場合)
+│   │   └── ...
+│   ├── tests/               # テスト
+│   ├── migrations/          # DBマイグレーション
+│   ├── pyproject.toml       # (Python) or package.json (Node.js) or build.gradle.kts (Kotlin)
+│   └── Dockerfile
+├── docker-compose.yml        # Docker構成
+├── .github/
+│   └── workflows/           # GitHub Actions
+│       ├── ci.yml
+│       └── deploy.yml
+├── docs/                     # ドキュメント
+│   ├── tech-stack.md        # このファイル
+│   ├── requirements/        # 要件定義書
+│   ├── design/              # 設計書
+│   └── tasks/               # タスク管理
+├── .env.example             # 環境変数テンプレート
+├── .gitignore
+└── README.md
 ```
+
+**重要**: 上記の `./` はカレントディレクトリ（現在作業中のディレクトリ）を指します。新しいディレクトリを作成するのではなく、既存のプロジェクトルートに直接配置してください。
 
 ## 🚀 セットアップ手順
 
 ### 1. 開発環境準備
 ```bash
-# Docker環境起動
-docker-compose up -d
-
-# フロントエンド セットアップ
-cd frontend
-npm install
-npm run dev
-
-# バックエンド セットアップ  
-cd backend
-npm install
-npx prisma migrate dev
-npm run dev
+[セットアップコマンド]
 ```
 
 ### 2. 主要コマンド
 ```bash
-# 開発サーバー起動
-npm run dev          # フロントエンド
-npm run dev:api      # バックエンド
-
-# テスト実行
-npm test            # 単体テスト
-npm run test:e2e    # E2Eテスト
-
-# ビルド
-npm run build       # 本番ビルド
-npm run preview     # ビルド確認
-
-# データベース
-npx prisma studio   # DB管理画面
-npx prisma generate # クライアント生成
+[開発に必要な主要コマンド]
 ```
 
 ## 📝 カスタマイズ方法
@@ -516,58 +531,88 @@ npx prisma generate # クライアント生成
 このファイルはプロジェクトの進行に応じて更新してください：
 
 1. **技術の追加**: 新しいライブラリ・ツールを追加
-2. **要件の変更**: パフォーマンス・セキュリティ要件の更新  
+2. **要件の変更**: パフォーマンス・セキュリティ要件の更新
 3. **インフラの変更**: デプロイ先・スケール要件の変更
 4. **チーム変更**: メンバー増減に応じた技術選択の見直し
 
 ## 🔄 更新履歴
-- 2025-01-08: 初回生成 (init-tech-stack.mdにより自動生成)
+- [生成日]: 初回生成 (init-tech-stackにより自動生成)
 ```
 
-3. **確認メッセージ表示**
+生成後、以下の確認メッセージを表示してください：
 
 ```markdown
 ✅ 技術スタック定義ファイルを生成しました！
 
 📄 **生成ファイル**: `docs/tech-stack.md`
-📊 **技術数**: フロントエンド6技術、バックエンド6技術、開発環境8ツール
 🎯 **推奨理由**: チーム経験との適合性、プロジェクト要件への最適化
 
 ## 次のステップ
 
 1. **ファイル確認**: `docs/tech-stack.md` の内容を確認
-2. **カスタマイズ**: 必要に応じて技術選択を微調整  
+2. **カスタマイズ**: 必要に応じて技術選択を微調整
 3. **チーム共有**: 技術選択をチームで合意
 4. **開発開始**: 他のkairo-*コマンドで要件定義・設計に進む
-
-## 技術スタック更新
-
-技術選択を変更する場合は：
-- `docs/tech-stack.md` を直接編集
-- または `init-tech-stack.md` を再実行
 
 このファイルは他の全てのコマンド（kairo-*, tdd-*, direct-*）で自動参照されます。
 ```
 
-## エラーハンドリング
+### 「一部変更したい」を選択された場合
 
-```markdown
-## よくある問題と解決方法
+以下の質問をAskUserQuestionツールで提示してください：
 
-### ❌ ファイル作成エラー
-**原因**: `docs/` ディレクトリへの書き込み権限なし
-**解決**: `mkdir -p docs && chmod 755 docs`
-
-### ❌ 既存ファイル上書き警告
-**原因**: `docs/tech-stack.md` が既に存在
-**選択肢**:
-1. 上書きする
-2. バックアップを作成してから上書き
-3. 別名で保存（例：`tech-stack-new.md`）
-
-### ❌ 推奨技術が見つからない
-**原因**: 特殊な技術要件や制約
-**対処**: カスタマイズモードで手動選択
+```
+AskUserQuestion({
+  questions: [
+    {
+      question: "どの部分を変更しますか？",
+      header: "カスタマイズ",
+      multiSelect: true,
+      options: [
+        { label: "フロントエンド", description: "現在: [推奨技術]" },
+        { label: "バックエンド", description: "現在: [推奨技術]" },
+        { label: "データベース", description: "現在: [推奨技術]" },
+        { label: "開発環境・ツール", description: "現在: [推奨技術]" }
+      ]
+    }
+  ]
+})
 ```
 
-このように、段階的なヒアリングとインテリジェントな推奨機能により、プロジェクトに最適な技術スタック定義が自動生成される仕組みを作成しました。
+選択された部分について、個別に詳細な選択肢を提示し、調整後に再度最終確認を行ってください。
+
+### 「やり直し」を選択された場合
+
+Phase 1から再度ヒアリングを開始してください。
+
+## エラーハンドリング
+
+### 既存ファイルの扱い
+
+`docs/tech-stack.md` が既に存在する場合、以下の質問をAskUserQuestionツールで提示してください：
+
+```
+AskUserQuestion({
+  questions: [
+    {
+      question: "docs/tech-stack.mdが既に存在します。どうしますか？",
+      header: "既存ファイル",
+      multiSelect: false,
+      options: [
+        { label: "上書き", description: "既存ファイルを上書きする" },
+        { label: "バックアップして上書き", description: "既存ファイルを.bakとして保存" },
+        { label: "別名で保存", description: "tech-stack-new.mdとして保存" },
+        { label: "キャンセル", description: "処理を中止する" }
+      ]
+    }
+  ]
+})
+```
+
+## 重要な注意事項
+
+1. **AskUserQuestionツールの使用**: 全ての質問はAskUserQuestionツールを使用して提示してください
+2. **並列質問**: 関連する質問は同時に提示して効率化してください
+3. **回答の保存**: ユーザーの回答は全て保存し、最終的なファイル生成に使用してください
+4. **最新バージョン確認**: 技術スタックを推奨する際は、可能な限り最新の安定版バージョンを推奨してください
+5. **整合性確認**: 推奨する技術スタック間の整合性を必ず確認してください
