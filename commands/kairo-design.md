@@ -1,7 +1,7 @@
 ---
 description: 承認された要件定義書に基づいて、技術設計文書を生成する。データフロー図、TypeScriptインターフェース、データベーススキーマ、APIエンドポイントを含む包括的な設計を行います。
 allowed-tools: Read, Glob, Grep, Task, Write, Edit, TodoWrite, WebFetch, AskUserQuestion
-argument-hint: [要件名]
+argument-hint: "[要件名]"
 ---
 Kairo開発の技術設計を実施し、PRD・EARS要件定義書・既存設計文書を参照しながら技術仕様を明確化します。信頼性レベルを示しながら設計文書を作成します。
 
@@ -83,7 +83,7 @@ Kairo開発の技術設計を実施し、PRD・EARS要件定義書・既存設�
   - `docs/design/` ディレクトリ配下の既存設計文書を確認
   - 既存のアーキテクチャ設計・データフロー図を読み込み
   - 既存のTypeScript型定義・DBスキーマ・API仕様を読み込み
-  - @task agent-symbol-searcher で関連設計文書を検索
+  - Task tool (subagent_type: Explore, thoroughness: quick) を使用して関連設計文書を探索
 
 - **既存コードベース・実装の分析**（オプション）
   - AskUserQuestion ツールを使ってユーザーに確認:
@@ -96,7 +96,7 @@ Kairo開発の技術設計を実施し、PRD・EARS要件定義書・既存設�
       - label: "不要"
         description: "要件定義と設計文書のみで設計を作成"
   - 「必要」を選択した場合のみ:
-    - @task agent-symbol-searcher で既存実装の網羅的調査
+    - Task tool (subagent_type: Explore, thoroughness: medium) を使用して既存実装の網羅的調査
     - アーキテクチャパターン・実装パターンの確認
     - 技術的制約・依存関係の特定
     - 既存型定義・インターフェースの確認

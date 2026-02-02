@@ -1,7 +1,7 @@
 ---
 description: 性能問題の原因を調査する
 allowed-tools: Read, Glob, Grep, Task, Bash, AskUserQuestion, TodoWrite
-argument-hint: [調査対象（機能名/エンドポイント/画面/自然言語）]
+argument-hint: "[調査対象（機能名/エンドポイント/画面/自然言語）]"
 ---
 性能問題の原因を特定するための包括的な調査を実施します。初期調査、詳細な原因分析、最終サマリーを段階的に作成し、性能問題の根本原因を明らかにします。
 

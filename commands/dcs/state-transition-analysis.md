@@ -1,7 +1,7 @@
 ---
 description: データの状態遷移フローを包括的に分析する
 allowed-tools: Read, Glob, Grep, Task, Bash, Write
-argument-hint: [対象データ名（リソース名/エンティティ名/モデル名）]
+argument-hint: "[対象データ名（リソース名/エンティティ名/モデル名）]"
 ---
 対象データの状態遷移に関わる全ての機能を特定し、状態遷移フロー、関連データとの依存関係、リスク評価を提供します。
 

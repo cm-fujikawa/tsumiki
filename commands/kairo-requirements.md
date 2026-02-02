@@ -1,7 +1,7 @@
 ---
 description: ユーザから提供された要件の概要を分析し、EARS（Easy Approach to Requirements Syntax）記法を使用して詳細な受け入れ基準を含む要件定義書を作成します。
 allowed-tools: Read, Glob, Grep, Task, Write, Edit, TodoWrite, WebFetch, AskUserQuestion
-argument-hint: [要件名] [PRDファイルパス(optional)]
+argument-hint: "[要件名] [PRDファイルパス(optional)]"
 ---
 Kairo開発の要件整理を実施し、PRD・EARS要件定義書・設計文書を参照しながら機能仕様を明確化します。信頼性レベルを示しながら要件定義を作成します。
 
@@ -97,7 +97,7 @@ PRDファイル={{prd_file_path}}
       - label: "不要"
         description: "設計文書のみで要件定義を作成"
   - 「必要」を選択した場合のみ:
-    - @task agent-symbol-searcher で既存仕様・実装の網羅的調査
+    - Task tool (subagent_type: Explore, thoroughness: medium) を使用して既存仕様・実装の網羅的調査
     - git status/log で現在の開発状況・進捗確認
     - 実装済み機能 vs 設計書の差分分析
     - 残タスク・未実装部分の特定

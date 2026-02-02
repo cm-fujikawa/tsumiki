@@ -1,7 +1,7 @@
 ---
 description: 増分開発の計画を立案する
 allowed-tools: Read, Glob, Grep, Task, Bash, AskUserQuestion, Write
-argument-hint: [開発対象（機能名/改善内容/自然言語）]
+argument-hint: "[開発対象（機能名/改善内容/自然言語）]"
 ---
 増分開発の対象を分析し、初期調査から追加調査を経て、実装方法毎のPRD（Product Requirements Document）を作成します。すべてのファイルは500行以内に分割して出力します。
 

@@ -1,7 +1,7 @@
 ---
 description: 設計文書に基づいて実装タスクを1日単位の粒度で分割し、1ヶ月単位のフェーズに整理します。各タスクを個別ファイルで管理し、依存関係を考慮した適切な順序で管理します。
-allowed-tools: Read, Glob, Grep, Task, Write, Edit, TodoWrite, WebFetch, AskUserQuestion
-argument-hint: [要件名]
+allowed-tools: Read, Glob, Grep, Task, Write, Edit, TodoWrite, WebFetch, AskUserQuestion, TaskCreate, TaskUpdate, TaskList
+argument-hint: "[要件名] [--task]"
 ---
 
 # kairo-tasks
@@ -24,11 +24,15 @@ argument-hint: [要件名]
 要件名={{requirement_name}}
 作業規模={{work_scope}}
 信頼性評価=[]
+claude_code_task登録={{register_to_claude_code_task}}
 
 # step
 
 - $ARGUMENTS がない場合、「引数に要件名を指定してください（例: ユーザー認証システム）」と言って終了する
-- $ARGUMENTS の内容と context の内容をまとめてユーザに宣言する
+- $ARGUMENTS から `--task` オプションの有無を確認する
+  - `--task` が含まれている場合、context の {{register_to_claude_code_task}} を true に設定
+  - `--task` を除いた残りを要件名として context の {{requirement_name}} に保存
+- $ARGUMENTS の内容と context の内容をまとめてユーザに宣言する（`--task` オプションが有効な場合はその旨も含める）
 - step2 を実行する
 
 ## step2: 作業規模の確認
@@ -93,8 +97,8 @@ argument-hint: [要件名]
   - 読み込んだ技術スタック定義に基づいて実装技術を特定
 
 - **既存タスクファイルの確認**
-  - @agent-symbol-searcher で既存タスクIDを検索し、見つかったタスクファイルをReadツールで読み込み
-  - 既存の`docs/tasks/{要件名}-TASK-*.md`ファイルをReadツールで読み込み
+  - Task tool (subagent_type: Explore, thoroughness: quick) を使用して既存タスクIDを探索
+  - 既存の`docs/tasks/{要件名}-TASK-*.md`ファイルを確認
   - 使用済みタスク番号（TASK-0000形式）を抽出
   - 新規タスクで重複しない番号を割り当て
 
@@ -334,7 +338,93 @@ AskUserQuestion ツールを使って、選択された項目に応じた質問�
 - タスク総数、推定工数、フェーズ数
 - 各ファイル内のリンクが正しく設定されていることを確認
 
+- `--task` オプションが指定されている場合は step6.5 を実行する
+- そうでない場合は次のステップ表示へ
+
 次のステップ表示: 「次のお勧めステップ: `/tsumiki:kairo-implement` でタスクを実装します。特定のタスクを実装する場合は `/tsumiki:kairo-implement TASK-0001` のように指定してください。」
+
+### 6.5 Claude Codeタスクへの登録（--taskオプション指定時のみ）
+
+**重要**: このステップは `--task` オプションが指定された場合のみ実行する。
+
+#### 6.5.1 タスク情報の収集
+
+- 作成した全タスクファイル（`docs/tasks/{要件名}/TASK-*.md`）を読み込む
+- 各タスクファイルから以下の情報を抽出：
+  - タスクID（例: TASK-0001）
+  - タスク名
+  - タスクタイプ（TDD/DIRECT）
+  - 推定工数
+  - フェーズ
+  - 完了条件
+  - 依存タスク（前提タスク）
+  - 詳細ファイルパス
+
+#### 6.5.2 既存Claude Codeタスクの確認
+
+- TaskList ツールを使用して既存のClaude Codeタスクを確認
+- 同じタスクID（TASK-0001など）が既に登録されているか確認
+- 重複がある場合は警告メッセージを表示し、スキップするか確認
+
+#### 6.5.3 タスクの一括登録
+
+以下の順序でタスクを登録：
+
+1. **依存関係のないタスクから登録**:
+   - 前提タスクがないタスクを最初に登録
+   - TaskCreate ツールを使用
+   - subject: "{タスクID}: {タスク名}"
+   - activeForm: "{タスク名}を実装中"
+   - description: 以下の情報を含める：
+     ```
+     タスクID: {タスクID}
+     タイプ: {タスクタイプ}
+     推定工数: {工数}時間
+     フェーズ: {フェーズ}
+     詳細ファイル: {ファイルパス}
+
+     【タスク概要】
+     {タスクファイルのタスク概要セクションから抽出}
+
+     【完了条件】
+     {完了条件のリスト}
+     ```
+   - metadata: `{"task_file": "{ファイルパス}", "phase": "{フェーズ}", "task_type": "{タイプ}", "requirement_name": "{要件名}"}`
+
+2. **依存関係の設定**:
+   - タスク作成後、TaskUpdate ツールを使用して依存関係を設定
+   - 前提タスクがある場合、addBlockedBy に前提タスクのIDを設定
+   - 例: タスクファイルに「前提タスク: TASK-0001」がある場合
+     → TaskUpdate で該当タスクの addBlockedBy に TASK-0001 を追加
+
+3. **登録結果の記録**:
+   - 登録成功したタスク数
+   - スキップしたタスク数（重複など）
+   - 依存関係設定の成功/失敗
+
+#### 6.5.4 登録完了報告
+
+- 登録したタスク総数
+- フェーズ別の登録数
+- 依存関係の設定状況
+- TaskList で登録結果を確認・表示
+- 次のステップ表示:
+  ```
+  ✅ {N}件のタスクをClaude Codeタスクシステムに登録しました。
+
+  タスクの確認: TaskList ツールで確認できます
+  タスクの開始: TaskUpdate で status を 'in_progress' に変更してください
+
+  次のお勧めステップ: `/tsumiki:kairo-implement` でタスクを実装します。
+  ```
+
+#### 注意事項
+
+- タスクID（TASK-0001など）はClaude Codeタスクシステムの内部IDとは異なる
+- Claude Codeタスクシステムでは自動的に #1, #2, ... の連番が割り当てられる
+- タスクファイルのTASK-0001とClaude Codeタスクの#1は必ずしも一致しない
+- 依存関係の解決には、タスクID（TASK-0001）からClaude CodeタスクID（#1）への変換マッピングが必要
+- マッピングは metadata の task_file を使って検索可能
 
 # rules
 
@@ -428,7 +518,97 @@ AskUserQuestion ツールを使って、選択された項目に応じた質問�
 1. `/tsumiki:direct-setup` - 直接実装・設定
 2. `/tsumiki:direct-verify` - 動作確認・品質確認
 
+## Claude Codeタスク登録のルール
+
+### タスクID変換マッピング
+
+- タスクファイルのタスクID（TASK-0001）とClaude Codeタスクシステムの内部ID（#1）は異なる
+- マッピングを作成して管理する：
+  ```
+  TASK-0001 → Claude Codeタスク #X
+  TASK-0002 → Claude Codeタスク #Y
+  ...
+  ```
+- metadata の task_file フィールドを使って逆引き可能にする
+
+### 依存関係の解決手順
+
+1. すべてのタスクをまず登録（依存関係なし）
+2. 登録後、各タスクのClaude CodeタスクIDを取得
+3. タスクID（TASK-0001）からClaude CodeタスクID（#X）へのマッピングを作成
+4. マッピングを使用して依存関係を設定
+5. TaskUpdate で addBlockedBy を使って依存関係を追加
+
+### タスク情報の構造化
+
+```
+subject: "TASK-0001: {タスク名}"
+description: |
+  タスクID: TASK-0001
+  タイプ: {TDD/DIRECT}
+  推定工数: {工数}時間
+  フェーズ: Phase 1 - {フェーズ名}
+  詳細ファイル: docs/tasks/{要件名}/TASK-0001.md
+
+  【タスク概要】
+  {タスクの概要}
+
+  【完了条件】
+  - 完了条件1
+  - 完了条件2
+activeForm: "{タスク名}を実装中"
+metadata: {
+  "task_file": "docs/tasks/{要件名}/TASK-0001.md",
+  "phase": "Phase 1",
+  "task_type": "TDD",
+  "requirement_name": "{要件名}"
+}
+```
+
+### 重複チェックのルール
+
+- TaskList で既存タスクを取得
+- subject が "TASK-{番号}:" で始まるタスクを抽出
+- 同じTASK番号が存在する場合は、ユーザーに確認
+  - 既存のタスクをスキップ
+  - または既存のタスクを削除して再登録
+
 # info
+
+## --task オプションの使用例
+
+### 基本的な使用方法
+
+```
+/tsumiki:kairo-tasks ユーザー認証システム --task
+```
+
+このコマンドは以下を実行します：
+1. タスクファイルの作成（通常通り）
+2. Claude Codeタスクシステムへの自動登録（--taskオプションにより追加）
+
+### オプションなしの使用方法
+
+```
+/tsumiki:kairo-tasks ユーザー認証システム
+```
+
+タスクファイルのみを作成し、Claude Codeタスクシステムには登録しません。
+
+### 登録されるタスク情報
+
+各タスクは以下の形式でClaude Codeタスクシステムに登録されます：
+- **subject**: "TASK-0001: 依存パッケージ追加とプロジェクト設定"
+- **description**: タスクID、タイプ、工数、フェーズ、概要、完了条件を含む詳細情報
+- **activeForm**: "依存パッケージ追加とプロジェクト設定を実装中"
+- **metadata**: task_file, phase, task_type, requirement_name を含むメタデータ
+- **blockedBy**: 前提タスクとの依存関係
+
+### 登録後の確認方法
+
+```
+TaskList ツールで登録されたタスクを確認
+```
 
 ## AskUserQuestion ツールの使用例
 

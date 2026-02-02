@@ -26,14 +26,14 @@ description: タスクファイルから実装可能なTODOリストを作成し
    - 各ディレクトリ内のすべてのファイルを読み込み、追加ルールとして適用
 
 2. **要件定義文書の分析**
-   - @agent-symbol-searcher で関連要件・設計文書を検索
+   - Task tool (subagent_type: Explore, thoroughness: quick) を使用して関連要件・設計文書を探索
    - EARS記法による要件の理解
    - ユーザストーリーと価値の把握
    - 機能要件と非機能要件の確認
    - Edgeケースと受け入れ基準の理解
 
 3. **設計文書の分析**
-   - @agent-symbol-searcher で既存アーキテクチャパターンを検索
+   - Task tool (subagent_type: Explore, thoroughness: quick) を使用して既存アーキテクチャパターンを探索
    - アーキテクチャ設計の全体像を把握
    - データベーススキーマの構造を理解
    - APIエンドポイントの仕様を確認
@@ -41,7 +41,7 @@ description: タスクファイルから実装可能なTODOリストを作成し
    - データフローの設計を理解
 
 4. **タスクファイルの分析**
-   - @agent-symbol-searcher で関連タスクIDや完了状態を検索
+   - Task tool (subagent_type: Explore, thoroughness: quick) を使用して関連タスクIDや完了状態を探索
    - 全体のフェーズ構造を把握
    - タスクID別の実装内容を確認
    - 依存関係と実行順序を理解

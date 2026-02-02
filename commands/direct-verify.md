@@ -1,7 +1,7 @@
 ---
 description: DIRECTタスクで実行した設定作業の動作確認とテストを行います。設定が正しく適用され、システムが期待通りに動作することを確認します。
 allowed-tools: Read, Glob, Grep, Task, Write, Edit, TodoWrite
-argument-hint: [要件名] [TASK-ID]
+argument-hint: "[要件名] [TASK-ID]"
 ---
 
 # direct-verify
@@ -33,7 +33,7 @@ DIRECTタスクで実行した設定作業の動作確認とテストを行い�
 
 ### 3. 設定の確認
 - 読み込んだ技術スタック定義に基づいて検証項目を特定
-- @agent-symbol-searcher で関連設定や検証パターンを検索し、見つかったファイルをReadツールで読み込み
+- Task tool (subagent_type: Explore, thoroughness: quick) を使用して関連設定や検証パターンを探索
 - `docs/implements/{要件名}/{TASK-ID}/setup-report.md` をReadツールで読み込み、設定作業の結果を確認
 - 環境変数の確認
 - 設定ファイルの内容確認
@@ -48,7 +48,7 @@ DIRECTタスクで実行した設定作業の動作確認とテストを行い�
 - **エラーが見つかった場合は自動的に修正を試行**
 
 ### 5. 動作テストの実行
-- @agent-symbol-searcher で既存のテストケースや検証スクリプトを検索し、見つかったファイルをReadツールで読み込み
+- Task tool (subagent_type: Explore, thoroughness: quick) を使用して既存のテストケースや検証スクリプトを探索
 - 基本的な動作確認
 - 接続テスト
 - 権限の確認

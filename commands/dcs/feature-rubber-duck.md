@@ -1,7 +1,7 @@
 ---
 description: アイデアを整理して実現可能なPRDを作成する
 allowed-tools: Read, Glob, Grep, Task, Bash, WebSearch, WebFetch, AskUserQuestion
-argument-hint: [機能やアイデアの概要（任意）]
+argument-hint: "[機能やアイデアの概要（任意）]"
 ---
 曖昧なアイデアや要望を対話を通じて整理し、実現可能なPRD（Product Requirements Document）を作成します。コードベースの調査、技術検証、要件の具体化を段階的に進めます。
 

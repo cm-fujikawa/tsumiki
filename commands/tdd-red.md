@@ -1,7 +1,7 @@
 ---
 description: TDDのRedフェーズを実行します。失敗するテストケースを作成し、実装すべき機能を明確に定義します。
 allowed-tools: Read, Glob, Grep, Task, Write, TodoWrite, Edit
-argument-hint: [要件名] [TASK-ID]
+argument-hint: "[要件名] [TASK-ID]"
 ---
 TDDのRedフェーズを実行します。失敗するテストケースを作成し、実装すべき機能を明確に定義します。
 
@@ -60,12 +60,12 @@ Redフェーズファイル=./docs/implements/{要件名}/{{task_id}}/{feature_n
   - 生成されたノートファイルを読み込み
 - ノートには技術スタック、開発ルール、関連実装、設計文書、注意事項が含まれる
 
-**5. @agent-symbol-searcher でテスト実装関連情報を検索し、見つかったファイルを読み込み**
+**5. Task tool (subagent_type: Explore, thoroughness: quick) を使用してテスト実装関連情報を探索**
 - 読み込んだ技術スタック定義に基づいてテストフレームワークを特定
 - **UIタスクの場合**: E2Eテストフレームワーク（Playwright等）の設定とサンプルを優先的に確認
-- 既存のテストファイルやテスト関数を検索し、該当ファイルをReadツールで読み込み
-- テストセットアップやモックの使用パターンを特定し、関連ファイルをReadツールで読み込み
-- **E2Eテスト設定確認**: playwright.config.js、cypress.config.js等の設定ファイルをReadツールで読み込み
+- 既存のテストファイルやテスト関数を探索
+- テストセットアップやモックの使用パターンを特定
+- **E2Eテスト設定確認**: playwright.config.js、cypress.config.js等の設定ファイルを確認
 
 **6. 関連する外部ファイルを直接読み込み**
 - 関連する設計文書やタスクファイルも必要に応じて読み込み
@@ -502,7 +502,7 @@ npm test -- --coverage
   - 設計文書（データモデル・ディレクトリ構造）
   - 注意事項（技術的制約・セキュリティ要件・パフォーマンス要件）
 - **追加ルール**（`docs/rule`, `docs/rule/tdd`, `docs/rule/tdd/red`）
-- **既存のテスト実装パターン**（symbol-searcherで検索したテストファイル）
+- **既存のテスト実装パターン**（Explore agentで探索したテストファイル）
 - **要件定義・テストケース定義**
 
 これらの情報を基に、以下の要件を満たすテストコードを作成してください。

@@ -1,7 +1,7 @@
 ---
 description: TDD開発の要件整理を行います。機能要件を明確化し、テスト駆動開発のための準備を行います。
 allowed-tools: Read, Glob, Grep, Task, Write, TodoWrite, Edit
-argument-hint: [要件名] [TASK-ID]
+argument-hint: "[要件名] [TASK-ID]"
 ---
 TDD開発の要件整理を実施し、EARS要件定義書・設計文書を参照しながら機能仕様を明確化します。信頼性レベルを示しながら要件定義を作成します。
 
@@ -16,6 +16,8 @@ TDD開発の要件整理を実施し、EARS要件定義書・設計文書を参�
 タスクファイル2=./docs/tasks/{要件名}-phase*.md
 タスクoverviewファイル1=./docs/tasks/{要件名}/overview.md
 タスクoverviewファイル2=./docs/tasks/{要件名}-overview.md
+出力ファイル=./docs/implements/{要件名}/{{task_id}}/{feature_name}-requirements.md
+
 
 # step
 
@@ -40,7 +42,7 @@ TDD開発の要件整理を実施し、EARS要件定義書・設計文書を参�
 - <requirements_template> の内容を context の情報で埋めて、要件定義書を直接作成する
   - 読み込んだコンテキスト情報（タスクノート、追加ルール等）を活用
   - 信頼性レベル（🔵🟡🔴）を各項目に記載
-  - Write ツールを使用して出力ファイルに保存
+  - Write ツールを使用して 出力ファイル に保存
 
 - 作成した要件定義書の内容について、品質判定基準に基づいて以下を評価：
   - 要件の曖昧さの有無
@@ -227,5 +229,5 @@ TDD開発の要件整理を実施し、EARS要件定義書・設計文書を参�
 
 上記のフォーマットに従って、要件定義書を作成してください。
 
-必ず Write ツールを使用して、{{出力ファイル名}} に結果を保存してください。
+必ず Write ツールを使用して、{{出力ファイル}} に結果を保存してください。
 </requirements_template>
