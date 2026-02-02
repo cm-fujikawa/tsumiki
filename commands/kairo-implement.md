@@ -1,6 +1,8 @@
 ---
 description: 分割されたタスクを順番に、またはユーザが指定したタスクを実装します。既存のTDDコマンドを活用して品質の高い実装を行います。
-argument-hint: [要件名（省略可）] [TASK-ID (TASK-00001)] [--hil]
+allowed-tools: Read, Glob, Grep, Task, Write, Edit, TodoWrite, AskUserQuestion, TaskList, TaskGet, TaskUpdate
+allowed-skills: tsumiki:tdd-tasknote, tsumiki:tdd-requirements, tsumiki:tdd-testcases, tsumiki:tdd-red, tsumiki:tdd-green, tsumiki:tdd-refactor, tsumiki:tdd-verify-complete, tsumiki:direct-setup, tsumiki:direct-verify
+argument-hint: "[要件名（省略可）] [TASK-ID (TASK-00001)] [--hil]"
 ---
 あなたは実装担当者です。残タスクを調べて 指定されたコマンドを駆使して実装をしてください
 
@@ -13,6 +15,10 @@ argument-hint: [要件名（省略可）] [TASK-ID (TASK-00001)] [--hil]
 ## オプション
 
 - `--hil` (Human-in-the-Loop): テストケース作成後にユーザーの確認を求め、承認後にtdd-red以降のフェーズを実行する
+- `--model [defaultModel]` タスク内で利用する最優先のデフォルトのモデルを指定する。設定がない場合はauto(それぞれのデフォルトを優先) sonnet/opusなどの指定が可能
+- `--think-model [thinkModelName]`: requirements/testcasesのモデル名を指定。デフォルトは opus
+- `--tdd-model [tddModelName]`: red/green/refactor/verify-complete のモデル名を指定。デフォルトはsonnet
+- `--note-model [noteModelName]`: tasknote のモデル名を指定。デフォルトはhaiku
 
 ## 前提条件
 
@@ -21,6 +27,28 @@ argument-hint: [要件名（省略可）] [TASK-ID (TASK-00001)] [--hil]
 - 既存のTDDコマンドが利用可能である
 - 実装用のワークスペースが設定されている
 - task_id は　`TASK-{4桁の数字}` (例 TASK-0001 ) である
+- thinkTaskName を コマンド選択ルール で設定する。 thinkModelName , defaultModel, `opus`
+- tddTaskName を コマンド選択ルール で設定する。 tddModelName , defaultModel, `sonnet`
+- noteTaskName を コマンド選択ルール で設定する。 noteModelName , defaultModel, `haiku`
+
+## コマンド選択ルール
+
+### パラメータ
+- selectModel
+- defaultModel
+- commandDefaultModel
+
+### ルール
+
+selectModel は　(selectModel == null && defaultModel != null) の場合、 defaultModel
+selectModel は　(selectModel == null && defaultModel == null) の場合、 commandDefaultModel
+
+この時点で selectModel が null の場合は sonnetにする
+
+selectModelに
+- `sonnet` が指定されている場合は `sonnet` を返す
+- `opus` が指定されている場合は `opus` を返す
+- `haiku` が指定されている場合は `haiku` を返す
 
 ## 実行内容
 
@@ -31,6 +59,26 @@ argument-hint: [要件名（省略可）] [TASK-ID (TASK-00001)] [--hil]
 - 🟡 **黄信号**: EARS要件定義書・設計文書から妥当な推測の場合
 - 🔴 **赤信号**: EARS要件定義書・設計文書にない推測の場合
 
+0. **Claude Codeタスクシステムの確認**
+   - TaskList ツールで未完了のタスク（pending/in_progress）を確認
+   - タスクのsubjectが "TASK-" で始まるものを抽出
+   - 各タスクについて：
+     - TaskGet でタスクの詳細情報を取得
+     - metadata から以下を取得：
+       - `requirement_name`: 要件名
+       - `task_file`: タスクファイルパス（例: docs/tasks/db-migration-tool/TASK-0001.md）
+       - `phase`: フェーズ情報
+       - `task_type`: タスクタイプ（TDD/DIRECT）
+   - 引数の優先順位：
+     - **引数で要件名が指定されている場合**: 引数の要件名を使用
+     - **引数で要件名が省略されている場合**: Claude Codeタスクのmetadataから要件名を取得
+     - **TASK-IDの決定**:
+       - 引数でTASK-IDが指定されている場合: 引数のTASK-IDを使用
+       - 引数でTASK-IDが省略されている場合:
+         - blockedByが空（依存タスクがない）かつstatus=pendingの最初のタスクを選択
+         - 選択したタスクのsubjectからTASK-IDを抽出（例: "TASK-0001: タスク名" → TASK-0001）
+   - 選択したClaude CodeタスクのIDを記録（後でステータス更新に使用）
+
 1. **追加ルールの読み込み**
    - `docs/spec/{要件名}/note.md` が存在する場合は読み込み
 
@@ -40,18 +88,20 @@ argument-hint: [要件名（省略可）] [TASK-ID (TASK-00001)] [--hil]
      - `docs/tasks/{要件名}/overview.md` or `docs/tasks/{要件名}-overview.md` - タスク全体概要
      - `docs/tasks/{要件名}/TASK-{task_id}.md` or `docs/tasks/{要件名}-tasks.md` - 対象タスクファイル
      - 依存タスクのファイルも読み込み、実装の順序と関連性を理解
+     - Claude Codeタスクのmetadataにtask_fileがある場合はそのパスを優先使用
 
-3. **タスクの選択**
-   - @agent-symbol-searcher で指定されたタスクID(TASK-0000形式)を検索し、見つかったタスクファイルをReadツールで読み込み
-   - ユーザが指定したタスクIDを確認
-   - 指定がない場合は、依存関係に基づいて次のタスクを自動選択
-   - 選択したタスクの詳細を表示
+3. **タスクの選択と実行開始**
+   - 選択されたタスクの詳細を表示
+   - Claude Codeタスクが選択されている場合:
+     - TaskUpdate でステータスを 'in_progress' に更新
+     - 更新内容を表示: "📌 Claude Codeタスク #{task_id} を実行中に設定しました"
    - 読み込んだ技術スタック定義に基づいて実装方針を決定
 
 4. **依存関係の確認**
-   - @agent-symbol-searcher で依存タスクの状態を検索し、見つかったタスクファイルをReadツールで読み込み
-   - 依存タスクが完了しているか確認
+   - Claude CodeタスクのblockedByフィールドを確認
+   - 依存タスクが完了しているか確認（status=completed）
    - 未完了の依存タスクがある場合は警告
+   - Task tool (subagent_type: Explore, thoroughness: quick) を使用して依存タスクファイルの状態も確認
 
 5. **実装ディレクトリの準備**
    - 現在のワークスペースで作業を行う
@@ -60,12 +110,13 @@ argument-hint: [要件名（省略可）] [TASK-ID (TASK-00001)] [--hil]
 6. **実装タイプの判定**
    - タスクの性質を分析（コード実装 vs 準備作業）
    - 実装方式を決定（TDD vs 直接作業）
+   - Claude Codeタスクのmetadata.task_typeも参考にする
 
 7. **実装プロセスの実行**
 
    ### A. **TDDプロセス**（コード実装タスク用）
 
-   a. **コンテキスト準備** - `@task general-purpose /tsumiki:tdd-tasknote`
+   a. **コンテキスト準備** - `@Task tool (subagent_type: general-purpose, model: {{noteTaskName}}) /tsumiki:tdd-tasknote`
    ```
    Task実行: TDDコンテキスト準備フェーズ
    目的: タスクノートを生成し、開発に必要なコンテキスト情報を収集する
@@ -80,7 +131,7 @@ argument-hint: [要件名（省略可）] [TASK-ID (TASK-00001)] [--hil]
    出力ファイル: docs/implements/{要件名}/{TASK-ID}/note.md
    ```
 
-   b. **要件定義** - `@task general-purpose /tsumiki:tdd-requirements`
+   b. **要件定義** - `@Task tool (subagent_type: general-purpose, model: {{thinkTaskName}}) /tsumiki:tdd-requirements`
    ```
    Task実行: TDD要件定義フェーズ
    目的: タスクの詳細要件を記述し、受け入れ基準を明確化する
@@ -89,7 +140,7 @@ argument-hint: [要件名（省略可）] [TASK-ID (TASK-00001)] [--hil]
    実行方式: 個別Task実行
    ```
 
-   c. **テストケース作成** - `@task general-purpose /tsumiki:tdd-testcases`
+   c. **テストケース作成** - `@Task tool (subagent_type: general-purpose, model: {{thinkTaskName}}) /tsumiki:tdd-testcases`
    ```
    Task実行: TDDテストケース作成フェーズ
    目的: 単体テストケースを作成し、エッジケースを考慮する
@@ -113,7 +164,7 @@ argument-hint: [要件名（省略可）] [TASK-ID (TASK-00001)] [--hil]
    - 追加・修正が必要なテストケースはないか
    ```
 
-   d. **テスト実装** - `@task general-purpose /tsumiki:tdd-red`
+   d. **テスト実装** - `@Task tool (subagent_type: general-purpose, model: {{tddTaskName}}) /tsumiki:tdd-red`
    ```
    Task実行: TDDレッドフェーズ
    目的: 失敗するテストを実装し、テストが失敗することを確認する
@@ -121,7 +172,7 @@ argument-hint: [要件名（省略可）] [TASK-ID (TASK-00001)] [--hil]
    実行方式: 個別Task実行
    ```
 
-   e. **最小実装** - `@task general-purpose /tsumiki:tdd-green`
+   e. **最小実装** - `@Task tool (subagent_type: general-purpose, model: {{tddTaskName}}) /tsumiki:tdd-green`
    ```
    Task実行: TDDグリーンフェーズ
    目的: テストが通る最小限の実装を行い、過度な実装を避ける
@@ -129,7 +180,7 @@ argument-hint: [要件名（省略可）] [TASK-ID (TASK-00001)] [--hil]
    実行方式: 個別Task実行
    ```
 
-   f. **リファクタリング** - `@task general-purpose /tsumiki:tdd-refactor`
+   f. **リファクタリング** - `@Task tool (subagent_type: general-purpose, model: {{tddTaskName}}) /tsumiki:tdd-refactor`
    ```
    Task実行: TDDリファクタリングフェーズ
    目的: コードの品質向上と保守性の改善を行う
@@ -137,7 +188,7 @@ argument-hint: [要件名（省略可）] [TASK-ID (TASK-00001)] [--hil]
    実行方式: 個別Task実行
    ```
 
-   g. **品質確認** - `@task general-purpose /tsumiki:tdd-verify-complete`
+   g. **品質確認** - `@Task tool (subagent_type: general-purpose, model: {{tddTaskName}}) /tsumiki:tdd-verify-complete`
    ```
    Task実行: TDD品質確認フェーズ
    目的: 実装の完成度とテストケースの充足度を確認する
@@ -160,13 +211,16 @@ argument-hint: [要件名（省略可）] [TASK-ID (TASK-00001)] [--hil]
    ```
    品質確認が成功した後の処理:
    - タスクファイルの完了チェックボックスを更新
+   - Claude Codeタスクシステムの更新:
+     - TaskUpdate でステータスを 'completed' に更新
+     - 更新結果を表示: "✅ Claude Codeタスク #{task_id} を完了に設定しました"
    - 実装サマリーの作成
-   - 次のタスクの提案
+   - 次のタスクの提案（依存関係が解消された次のタスク）
    ```
 
    ### B. **直接作業プロセス**（準備作業タスク用）
 
-   a. **準備作業の実行** - `@task general-purpose /tsumiki:direct-setup`
+   a. **準備作業の実行** - `@Task tool (subagent_type: general-purpose, model: {{tddTaskName}}) /tsumiki:direct-setup`
    ```
    Task実行: 直接作業実行フェーズ
    目的: ディレクトリ作成、設定ファイル作成、依存関係のインストール、環境設定を行う
@@ -178,7 +232,7 @@ argument-hint: [要件名（省略可）] [TASK-ID (TASK-00001)] [--hil]
    実行方式: 個別Task実行
    ```
 
-   b. **作業結果の確認** - `@task general-purpose /tsumiki:direct-verify`
+   b. **作業結果の確認** - `@Task tool (subagent_type: general-purpose, model: {{tddTaskName}}) /tsumiki:direct-verify`
    ```
    Task実行: 直接作業確認フェーズ
    目的: 作業完了の検証と成果物確認を行う
@@ -193,27 +247,38 @@ argument-hint: [要件名（省略可）] [TASK-ID (TASK-00001)] [--hil]
    ```
    作業確認が成功した後の処理:
    - タスクファイルの完了チェックボックスを更新
+   - Claude Codeタスクシステムの更新:
+     - TaskUpdate でステータスを 'completed' に更新
+     - 更新結果を表示: "✅ Claude Codeタスク #{task_id} を完了に設定しました"
    - 実装サマリーの作成
-   - 次のタスクの提案
+   - 次のタスクの提案（依存関係が解消された次のタスク）
    ```
 
-8. **全体の完了確認**
+7. **全体の完了確認**
    - タスクのステータスを更新（タスクファイルのチェックボックスにチェックを入れる）
+   - Claude Codeタスクシステムの更新:
+     - TaskUpdate でステータスを 'completed' に更新
+     - 依存関係が解消された次のタスクを TaskList で確認
    - 実装結果をドキュメント化
-   - 次のタスクを提案
+   - 次のタスクを提案（Claude Codeタスクの依存関係を考慮）
 
 ## 実行フロー
 
 ```mermaid
 flowchart TD
-    A[1. 追加ルール読み込み] --> A1[2. プロジェクト文書読み込み]
+    A0[0. Claude Codeタスク確認] --> A0_1{タスク存在?}
+    A0_1 -->|Yes| A0_2[要件名・TASK-ID取得]
+    A0_1 -->|No| A0_3[引数から取得]
+    A0_2 --> A0_4[TaskUpdate: in_progress]
+    A0_3 --> A
+    A0_4 --> A[1. 追加ルール読み込み]
+    A --> A1[2. プロジェクト文書読み込み]
     A1 --> A2[要件定義書・設計文書]
-    A2 --> B[3. 技術スタック読み込み]
-    B --> C[4. タスク選択]
-    C --> D{5. 依存関係OK?}
+    A2 --> B[3. タスク選択確認]
+    B --> D{4. 依存関係OK?}
     D -->|No| E[警告表示]
-    D -->|Yes| F[6. ディレクトリ準備]
-    F --> G{7. タスクタイプ判定}
+    D -->|Yes| F[5. ディレクトリ準備]
+    F --> G{6. タスクタイプ判定}
 
     G -->|コード実装| H[TDDプロセス]
     G -->|準備作業| M[直接作業プロセス]
@@ -240,9 +305,12 @@ flowchart TD
     M1 --> M2[b. direct-verify]
     M2 --> M3[c. タスク完了処理]
 
-    H8 --> I{9. 他のタスク?}
-    M3 --> I
-    I -->|Yes| C
+    H8 --> H9[TaskUpdate: completed]
+    M3 --> M4[TaskUpdate: completed]
+
+    H9 --> I{8. 他のタスク?}
+    M4 --> I
+    I -->|Yes| A0
     I -->|No| J[全タスク完了]
 ```
 
@@ -260,6 +328,16 @@ $ /tsumiki:kairo-implement {要件名} TASK-0001 --hil
 
 # Human-in-the-Loopモードで全タスクを実装
 $ /tsumiki:kairo-implement {要件名} --hil
+
+# Claude Codeタスクシステムと連携（引数省略）
+# - 未完了のClaude Codeタスクから自動的に要件名とTASK-IDを取得
+# - タスク開始時にステータスを in_progress に更新
+# - タスク完了時にステータスを completed に更新
+$ /tsumiki:kairo-implement
+
+# Claude Codeタスクシステムと連携（要件名のみ指定）
+# - 指定した要件名のClaude Codeタスクから最初の未完了タスクを選択
+$ /tsumiki:kairo-implement {要件名}
 ```
 
 ## 実装タイプ判定基準
@@ -302,30 +380,38 @@ $ /tsumiki:kairo-implement {要件名} --hil
 
 ```bash
 # TDDプロセスの場合
-@task general-purpose /tsumiki:tdd-tasknote {要件名} {TASK-ID}
-@task general-purpose /tsumiki:tdd-requirements {要件名} {TASK-ID}
-@task general-purpose /tsumiki:tdd-testcases {要件名} {TASK-ID}
-@task general-purpose /tsumiki:tdd-red
-@task general-purpose /tsumiki:tdd-green
-@task general-purpose /tsumiki:tdd-refactor
-@task general-purpose /tsumiki:tdd-verify-complete
+@Task tool (subagent_type: general-purpose, model: {{noteTaskName}}) /tsumiki:tdd-tasknote {要件名} {TASK-ID}
+@Task tool (subagent_type: general-purpose, model: {{thinkTaskName}}) /tsumiki:tdd-requirements {要件名} {TASK-ID}
+@Task tool (subagent_type: general-purpose, model: {{thinkTaskName}}) /tsumiki:tdd-testcases {要件名} {TASK-ID}
+@Task tool (subagent_type: general-purpose, model: {{tddTaskName}}) /tsumiki:tdd-red {要件名} {TASK-ID}
+@Task tool (subagent_type: general-purpose, model: {{tddTaskName}}) /tsumiki:tdd-green {要件名} {TASK-ID}
+@Task tool (subagent_type: general-purpose, model: {{tddTaskName}}) /tsumiki:tdd-refactor {要件名} {TASK-ID}
+@Task tool (subagent_type: general-purpose, model: {{tddTaskName}}) /tsumiki:tdd-verify-complete {要件名} {TASK-ID}
 
 # 直接作業プロセスの場合
-@task general-purpose /tsumiki:direct-setup
-@task general-purpose /tsumiki:direct-verify
+@Task tool (subagent_type: general-purpose, model: {{tddTaskName}}) /tsumiki:direct-setup {要件名} {TASK-ID}
+@Task tool (subagent_type: general-purpose, model: {{tddTaskName}}) /tsumiki:direct-verify {要件名} {TASK-ID}
 ```
 
 ## 実装時の注意事項
 
 ### 全般
 
-1. **プロジェクト文書の活用**
+1. **Claude Codeタスクシステム連携**
+   - 実行開始時に TaskList で未完了タスクを確認
+   - タスク開始時に TaskUpdate でステータスを 'in_progress' に更新
+   - タスク完了時に TaskUpdate でステータスを 'completed' に更新
+   - metadata から要件名、タスクファイルパス、タイプを取得
+   - 引数が省略された場合は Claude Codeタスクの情報を使用
+   - 依存関係（blockedBy）を考慮して次のタスクを提案
+
+2. **プロジェクト文書の活用**
    - 要件定義書（EARS記法）を常に参照し、実装の根拠を明確にする
    - 設計文書に記載されたアーキテクチャ、データフロー、API仕様に従う
    - タスクファイルの「関連文書」セクションから必要な文書を確認
    - 信頼性レベル（🔵🟡🔴）を参考に、推測が必要な箇所を特定
 
-2. **ファイル構造の理解**
+3. **ファイル構造の理解**
    - `docs/spec/{要件名}/` - 要件定義書
    - `docs/design/{要件名}/` - 設計文書
    - `docs/tasks/{要件名}/` - タスク管理
@@ -333,21 +419,21 @@ $ /tsumiki:kairo-implement {要件名} --hil
 
 ### TDDプロセス用
 
-1. **--hilオプション使用時の注意**
+4. **--hilオプション使用時の注意**
    - テストケース作成後、必ずユーザーの確認を待つ
    - ユーザーが承認するまでtdd-red以降のフェーズを実行しない
    - 修正指示があった場合は、tdd-testcasesフェーズから再実行
    - AskUserQuestion ツールを使用してユーザーの選択を取得
 
-2. **テストファースト**
+5. **テストファースト**
    - 必ずテストを先に書く
    - テストが失敗することを確認してから実装
 
-3. **インクリメンタルな実装**
+6. **インクリメンタルな実装**
    - 一度に全てを実装しない
    - 小さなステップで進める
 
-4. **品質確認の徹底**
+7. **品質確認の徹底**
    - 各ステップで品質を確認
    - 技術的負債を作らない
    - **テストケース充足度の確認**:
@@ -359,7 +445,7 @@ $ /tsumiki:kairo-implement {要件名} --hil
      - 要件定義書・設計文書に記載された仕様を満たしているか
      - コード品質（可読性、保守性）が基準を満たしているか
 
-5. **品質確認後の対応**
+8. **品質確認後の対応**
    - テストケース不足の場合:
      - d. tdd-red に戻り、不足しているテストケースを追加
      - e. tdd-green で実装を追加
@@ -370,7 +456,7 @@ $ /tsumiki:kairo-implement {要件名} --hil
      - f. tdd-refactor でリファクタリング
      - g. tdd-verify-complete で再確認
 
-6. **Human-in-the-Loop実行フロー**
+9. **Human-in-the-Loop実行フロー**
    - --hilオプション指定時:
      1. c. tdd-testcases でテストケースを作成
      2. c-1. 作成されたテストケースの一覧と分析結果を表示
@@ -382,17 +468,17 @@ $ /tsumiki:kairo-implement {要件名} --hil
 
 ### 直接作業プロセス用
 
-1. **作業の段階的実行**
-   - 依存関係を考慮した順序で実行
-   - 各ステップの完了を確認
+10. **作業の段階的実行**
+    - 依存関係を考慮した順序で実行
+    - 各ステップの完了を確認
 
-2. **設定の検証**
-   - 作成した設定ファイルの動作確認
-   - 環境の正常性チェック
+11. **設定の検証**
+    - 作成した設定ファイルの動作確認
+    - 環境の正常性チェック
 
-3. **ドキュメントの更新**
-   - 実装と同時にドキュメントも更新
-   - 他の開発者が理解できるように
+12. **ドキュメントの更新**
+    - 実装と同時にドキュメントも更新
+    - 他の開発者が理解できるように
 
 ## 出力フォーマット
 
@@ -406,6 +492,7 @@ $ /tsumiki:kairo-implement {要件名} --hil
 - 依存: {{依存タスクID}} ✅
 - 推定時間: 4時間
 - 実装タイプ: TDDプロセス
+- Claude Codeタスク: #{{claude_task_id}} (in_progress)
 
 🔄 TDDプロセスを開始します...
 ```
@@ -420,6 +507,7 @@ $ /tsumiki:kairo-implement {要件名} --hil
 - 依存: {{依存タスクID}} ✅
 - 推定時間: 3時間
 - 実装タイプ: 直接作業プロセス
+- Claude Codeタスク: #{{claude_task_id}} (in_progress)
 
 🔧 準備作業を開始します...
 ```
@@ -512,6 +600,9 @@ $ /tsumiki:kairo-implement {要件名} --hil
 ✅ タスクファイルのチェックボックスを更新しました
    - [ ] **タスク完了** → [x] **タスク完了**
 
+✅ Claude Codeタスク #{{claude_task_id}} を完了に設定しました
+   - Status: in_progress → completed
+
 📊 実装サマリー:
 - 実装タイプ: TDDプロセス (個別Task実行)
 - 実行Taskステップ: 8個 (全て成功)
@@ -523,7 +614,7 @@ $ /tsumiki:kairo-implement {要件名} --hil
 - 所要時間: 4時間15分
 
 📝 次の推奨タスク:
-- {{次のタスクID}}: {{次のタスク名}}
+- {{次のタスクID}}: {{次のタスク名}} (Claude Codeタスク: #{{次のclaude_task_id}})
 - {{関連タスクID}}: {{関連タスク名}}（依存関係あり）
 
 続けて実装しますか？ (y/n)
@@ -537,6 +628,9 @@ $ /tsumiki:kairo-implement {要件名} --hil
 ✅ タスクファイルのチェックボックスを更新しました
    - [ ] **タスク完了** → [x] **タスク完了**
 
+✅ Claude Codeタスク #{{claude_task_id}} を完了に設定しました
+   - Status: in_progress → completed
+
 📊 実装サマリー:
 - 実装タイプ: 直接作業プロセス (個別Task実行)
 - 実行Taskステップ: 2個 (全て成功)
@@ -546,7 +640,7 @@ $ /tsumiki:kairo-implement {要件名} --hil
 - 所要時間: 2時間30分
 
 📝 次の推奨タスク:
-- {{次のタスクID}}: {{次のタスク名}}
+- {{次のタスクID}}: {{次のタスク名}} (Claude Codeタスク: #{{次のclaude_task_id}})
 - {{関連タスクID}}: {{関連タスク名}}（依存関係あり）
 
 続けて実装しますか？ (y/n)
@@ -554,13 +648,22 @@ $ /tsumiki:kairo-implement {要件名} --hil
 
 ## エラーハンドリング
 
-- 依存タスク未完了: 警告を表示し、確認を求める
-- テスト失敗: 詳細なエラー情報を表示
-- ファイル競合: バックアップを作成してから上書き
+- **Claude Codeタスク関連**:
+  - タスクが見つからない: 引数から要件名とTASK-IDを取得して続行
+  - タスクステータス更新失敗: 警告を表示するが処理は続行
+  - metadataが不完全: 引数またはタスクファイルから情報を補完
+- **依存関係**:
+  - 依存タスク未完了: 警告を表示し、確認を求める
+  - blockedByに未完了タスクがある: 依存タスクの一覧を表示
+- **実装エラー**:
+  - テスト失敗: 詳細なエラー情報を表示
+  - ファイル競合: バックアップを作成してから上書き
 
 ## 実行後の確認
 
 - 実装したファイルの一覧を表示
 - テスト結果のサマリーを表示
-- 残りのタスクと進捗率を表示
-- 次のタスクの提案を表示
+- Claude Codeタスクのステータス更新確認
+- 残りのタスクと進捗率を表示（Claude Codeタスクシステムの情報を含む）
+- 次のタスクの提案を表示（依存関係が解消されたタスクを優先）
+- TaskList で全体の進捗を確認

@@ -1,7 +1,7 @@
 ---
 description: TDD開発でテストケースの実装が完全に完了しているかを検証します。すべてのテストが通ることを確認し、開発完了を保証します。
 allowed-tools: Read, Glob, Grep, Task, Write, Edit, TodoWrite
-argument-hint: [要件名] [TASK-ID]
+argument-hint: "[要件名] [TASK-ID]"
 ---
 TDD開発でテストケースの実装が完全に完了しているかを検証します。
 
@@ -45,10 +45,10 @@ Refactorフェーズファイル=./docs/implements/{要件名}/{{task_id}}/{feat
    - `./docs/rule/tdd/verify-complete` ディレクトリが存在する場合は読み込み
    - 各ディレクトリ内のすべてのファイルを読み込み、追加ルールとして適用
 
-3. **@agent-symbol-searcher で検証関連情報を検索し、見つかったファイルを読み込み**
-   - 完了予定のテストケースや機能を検索し、該当ファイルをReadツールで読み込み
-   - 既存のテストカバレッジや品質基準を確認し、関連ファイルをReadツールで読み込み
-   - 実装完了タスクのマーキングパターンを特定し、タスクファイルをReadツールで読み込み
+3. **Task tool (subagent_type: Explore, thoroughness: quick) を使用して検証関連情報を探索**
+   - 完了予定のテストケースや機能を探索
+   - 既存のテストカバレッジや品質基準を確認
+   - 実装完了タスクのマーキングパターンを特定
 
 4. **元タスクファイルを直接読み込み**
    - `docs/tasks/{taskfile}.md` - タスクの完了状態を確認
@@ -61,6 +61,23 @@ Refactorフェーズファイル=./docs/implements/{要件名}/{{task_id}}/{feat
 - **必須**: @task で全ての既存テストが成功していることを確認
 - **テスト失敗がある場合**: memoファイルに記載し、後の工程で修正対応することを記録
 - **この工程では修正禁止**: テスト失敗を発見してもここでは修正しない
+- **テスト実行時間の確認**:
+  - 総実行時間が30秒以上の場合は記録
+  - 2秒以上かかるテストファイルを特定して記録
+  - 遅いテストがある場合は以下を推奨として記録:
+    ```
+    📝 推奨事項: テスト実行速度の改善
+
+    総実行時間: XX秒（30秒以上）
+    遅いテストファイル:
+    - test/user.test.js: 15秒
+    - test/integration.test.js: 8秒
+
+    改善方法:
+    1. `/tsumiki:dcs:test-performance-analysis` で詳細分析
+    2. `/tsumiki:test-optimization-patterns` でパターンを確認
+    3. 次のTDDサイクルで段階的に改善
+    ```
 - テスト状態を記録し、step4 に進む
 
 ## step4: 実装状況の分析

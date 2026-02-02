@@ -1,7 +1,7 @@
 ---
 description: 機能のシーケンス図を作成する
 allowed-tools: Read, Glob, Grep, Task, Bash, AskUserQuestion, Write
-argument-hint: [機能名または対象(ファイルパス/関数名/クラス名/自然言語)]
+argument-hint: "[機能名または対象(ファイルパス/関数名/クラス名/自然言語)]"
 ---
 指定された機能のシーケンス図をmermaid形式で作成します。調査結果を一時ファイルに保存し、Task で参照することでコンテキスト削減を実現します。
 

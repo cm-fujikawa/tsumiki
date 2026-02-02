@@ -1,7 +1,7 @@
 ---
 description: TDD開発のコンテキスト情報を収集してノートにまとめます。技術スタック、追加ルール、関連ファイルの情報を整理します。
 allowed-tools: Read, Glob, Grep, Task, Write, TodoWrite, Edit
-argument-hint: [要件名] [TASK-ID]
+argument-hint: "[要件名] [TASK-ID]"
 ---
 TDD開発の前にコンテキスト情報を収集し、開発に必要な情報をノートファイルにまとめます。
 
@@ -17,9 +17,7 @@ noteファイル="./docs/implements/{要件名}/{{task_id}}/note.md"
 # step
 
 - $ARGUMENTS がない場合、「引数に要件名とTASK-IDを指定してください（例: ユーザー認証機能 TASK-0001）」と言って終了する
-- {{noteファイル}} が既にある場合、存在しているので更新して良いかをユーザに確認する。
-  - ユーザが良いといった場合は再作成をする。
-  - ユーザが更新しないとした場合は終了する
+- {{noteファイル}} が既にある場合、「すでに完了しています」といって終了する
 - 開発コンテキストを収集する：
    **追加ルールの読み込み**
    - `AGENTS.md` ファイルが存在する場合は読み込み
@@ -28,14 +26,14 @@ noteファイル="./docs/implements/{要件名}/{{task_id}}/note.md"
    - `./docs/rule/tdd/green` ディレクトリが存在する場合は読み込み
    - 各ディレクトリ内のすべてのファイルを読み込み、追加ルールとして適用
 
-  **@agent-symbol-searcher で実装関連情報を検索し、見つかったファイルを読み込み**
+  **Task tool (subagent_type: Explore, thoroughness: quick) を使用して実装関連情報を探索**
     - `./docs/spec/{要件名}-requirements.md`: 統合機能要件と関連文書へ
     - `./docs/spec/{要件名}-user-stories.md`: 詳細なユーザストーリー
     - `./docs/spec/{要件名}-acceptance-criteria.md`: 受け入れ基準とテスト項目
     - `./docs/spec/{要件名}-*.md`: 受け入れ基準とテスト項目
-   - 既存の類似機能やユーティリティ関数を検索し、該当ファイルをReadツールで読み込み
-   - 実装パターンやアーキテクチャガイドラインを特定し、設計文書をReadツールで読み込み
-   - 依存関係やインポートパスを確認し、関連ファイルをReadツールで読み込み
+   - 既存の類似機能やユーティリティ関数を探索
+   - 実装パターンやアーキテクチャガイドラインを特定
+   - 依存関係やインポートパスを確認
 
   **関連ファイルを直接読み込み**
    - `./docs/implements/{要件名}/{{task_id}}/*.md` - taskに関係する全てのファイルを読み込み
