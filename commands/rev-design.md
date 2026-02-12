@@ -11,7 +11,7 @@ description: 既存のコードベースから技術設計文書を逆生成し�
 ## 前提条件
 
 - 分析対象のコードベースが存在する
-- `docs/reverse/` ディレクトリが存在する（なければ作成）
+- `docs/design/{要件名}/` ディレクトリが存在する（なければ作成）
 - 可能であれば事前に `/tsumiki:rev-tasks` を実行済み
 
 ## 実行内容
@@ -53,18 +53,18 @@ description: 既存のコードベースから技術設計文書を逆生成し�
    - ルーティング設計
 
 7. **ファイルの作成**
-   - `docs/reverse/{プロジェクト名}-architecture.md` - アーキテクチャ概要
-   - `docs/reverse/{プロジェクト名}-dataflow.md` - データフロー図
-   - `docs/reverse/{プロジェクト名}-api-specs.md` - API仕様
-   - `docs/reverse/{プロジェクト名}-database.md` - DB設計
-   - `docs/reverse/{プロジェクト名}-interfaces.ts` - 型定義集約
+   - `docs/design/{要件名}/architecture.md` - アーキテクチャ概要
+   - `docs/design/{要件名}/dataflow.md` - データフロー図
+   - `docs/design/{要件名}/api-endpoints.md` - API仕様
+   - `docs/design/{要件名}/database-schema.sql` - DB設計
+   - `docs/design/{要件名}/interfaces.ts` - 型定義集約
 
 ## 出力フォーマット例
 
 ### architecture.md
 
 ```markdown
-# {プロジェクト名} アーキテクチャ設計（逆生成）
+# {要件名} アーキテクチャ設計（逆生成）
 
 ## 分析日時
 {実行日時}

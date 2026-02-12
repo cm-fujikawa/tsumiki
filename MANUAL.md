@@ -139,7 +139,7 @@ Kairoは以下を生成します：
 - 各タスクの詳細（テスト要件、UI/UX要件含む）
 - 実行順序とスケジュール
 
-生成されたファイル: `/docs/tasks/{要件名}-tasks.md`
+生成されたファイル: `/docs/tasks/{要件名}/overview.md`、`/docs/tasks/{要件名}/TASK-XXXX.md`
 
 #### 5. 実装
 
@@ -198,14 +198,17 @@ Kairoは各タスクに対して内部的にTDDコマンドを使用して以下
 
 ###### rev-tasks（タスク構造分析）
 
-**目的**: 既存コードから実装済み機能をタスクとして抽出・整理
+**目的**: 既存コードから機能単位で実装済み機能をタスクとして抽出・整理
 
 **生成されるファイル**:
-- `docs/reverse/{プロジェクト名}-discovered-tasks.md`
+
+- `docs/tasks/{要件名}/overview.md` - 機能ごとのタスク一覧
+- `docs/tasks/{要件名}/TASK-XXXX.md` - 個別タスクファイル
 
 **分析内容**:
 - コードベース構造の把握
-- 実装済み機能の特定
+- 機能の特定と分類
+- 実装済み機能のタスク分解
 - API エンドポイントの抽出
 - データベース構造の分析
 - タスクの依存関係推定
@@ -215,11 +218,11 @@ Kairoは各タスクに対して内部的にTDDコマンドを使用して以下
 **目的**: 実装されたアーキテクチャから技術設計文書を生成
 
 **生成されるファイル**:
-- `docs/reverse/{プロジェクト名}-architecture.md`
-- `docs/reverse/{プロジェクト名}-dataflow.md`
-- `docs/reverse/{プロジェクト名}-api-specs.md`
-- `docs/reverse/{プロジェクト名}-database.md`
-- `docs/reverse/{プロジェクト名}-interfaces.ts`
+- `docs/design/{要件名}/architecture.md`
+- `docs/design/{要件名}/dataflow.md`
+- `docs/design/{要件名}/api-endpoints.md`
+- `docs/design/{要件名}/database-schema.sql`
+- `docs/design/{要件名}/interfaces.ts`
 
 **分析内容**:
 - アーキテクチャパターンの特定
@@ -233,9 +236,9 @@ Kairoは各タスクに対して内部的にTDDコマンドを使用して以下
 **目的**: 実装コードからテストケースと仕様書を逆生成
 
 **生成されるファイル**:
-- `docs/reverse/{プロジェクト名}-test-specs.md`
-- `docs/reverse/{プロジェクト名}-test-cases.md`
-- `docs/reverse/tests/` - 生成されたテストコード
+- `docs/spec/{要件名}/test-specs.md` - テスト仕様書
+- `docs/spec/{要件名}/test-cases.md` - テストケース一覧
+- `docs/spec/{要件名}/tests/` - 生成されたテストコード
 
 **分析内容**:
 - 既存テストの分析
@@ -249,7 +252,9 @@ Kairoは各タスクに対して内部的にTDDコマンドを使用して以下
 **目的**: 実装機能から要件定義書をEARS記法で逆生成
 
 **生成されるファイル**:
-- `docs/reverse/{プロジェクト名}-requirements.md`
+- `docs/spec/{要件名}/requirements.md`
+- `docs/spec/{要件名}/user-stories.md`
+- `docs/spec/{要件名}/acceptance-criteria.md`
 
 **分析内容**:
 - ユーザーストーリーの逆算
@@ -289,11 +294,13 @@ Kairoは各タスクに対して内部的にTDDコマンドを使用して以下
 │   └── commands/           # Kairoコマンド
 ├── docs/
 │   ├── implements/        # 実装コード
-│   │   └── {タスクID}/
+│   │   └── {要件名}/{タスクID}/
 │   ├── spec/              # 要件定義書
+│   │   └── {要件名}/
 │   ├── design/            # 設計文書
-│   ├── tasks/             # タスク一覧
-│   └── reverse/           # リバース文書
+│   │   └── {要件名}/
+│   └── tasks/             # タスク一覧
+│       └── {要件名}/
 ├── backend/              # バックエンドコード
 ├── frontend/             # フロントエンドコード
 └── database/             # データベース関連
