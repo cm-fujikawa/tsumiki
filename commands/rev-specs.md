@@ -11,7 +11,7 @@ description: 既存のコードベースから包括的なテストケースと�
 ## 前提条件
 
 - 分析対象のコードベースが存在する
-- `docs/reverse/` ディレクトリが存在する（なければ作成）
+- `docs/spec/{要件名}/` ディレクトリが存在する（なければ作成）
 - 可能であれば事前に `/tsumiki:rev-requirements`, `/tsumiki:rev-design` を実行済み
 
 ## 実行内容
@@ -52,16 +52,16 @@ description: 既存のコードベースから包括的なテストケースと�
    - テスト手順書
 
 7. **ファイルの作成**
-   - `docs/reverse/{プロジェクト名}-test-specs.md` - テスト仕様書
-   - `docs/reverse/{プロジェクト名}-test-cases.md` - テストケース一覧
-   - `docs/reverse/tests/` - 生成されたテストコード
+   - `docs/spec/{要件名}/test-specs.md` - テスト仕様書
+   - `docs/spec/{要件名}/test-cases.md` - テストケース一覧
+   - `docs/spec/{要件名}/tests/` - 生成されたテストコード
 
 ## 出力フォーマット例
 
 ### test-specs.md
 
 ```markdown
-# {プロジェクト名} テスト仕様書（逆生成）
+# {要件名} テスト仕様書（逆生成）
 
 ## 分析概要
 
@@ -507,7 +507,7 @@ process.env.NODE_ENV = 'test';
 ### test-cases.md
 
 ```markdown
-# {プロジェクト名} テストケース一覧（逆生成）
+# {要件名} テストケース一覧（逆生成）
 
 ## テストケース概要
 
